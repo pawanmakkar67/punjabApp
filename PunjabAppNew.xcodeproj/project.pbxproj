@@ -6,6 +6,18 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		4F98CF452EC75AD20023B440 /* ObjectMapper in Frameworks */ = {isa = PBXBuildFile; productRef = 4F98CF442EC75AD20023B440 /* ObjectMapper */; };
+		4FE834CB2EB2590800DF964E /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 4FE834CA2EB2590800DF964E /* FirebaseAuth */; };
+		4FE834CD2EB2590800DF964E /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 4FE834CC2EB2590800DF964E /* FirebaseCore */; };
+		4FE834CF2EB2590800DF964E /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 4FE834CE2EB2590800DF964E /* FirebaseCrashlytics */; };
+		4FE834D12EB2590800DF964E /* FirebaseInAppMessaging-Beta in Frameworks */ = {isa = PBXBuildFile; productRef = 4FE834D02EB2590800DF964E /* FirebaseInAppMessaging-Beta */; };
+		4FE834D32EB2590800DF964E /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 4FE834D22EB2590800DF964E /* FirebaseMessaging */; };
+		4FE834D52EB2590800DF964E /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = 4FE834D42EB2590800DF964E /* FirebaseRemoteConfig */; };
+		4FE839452EB8AD5A00DF964E /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 4FE839442EB8AD5A00DF964E /* Alamofire */; };
+		4FE839DE2EB8B9E100DF964E /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 4FE839DD2EB8B9E100DF964E /* Kingfisher */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		4FE834AD2EB2572300DF964E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -29,9 +41,22 @@
 		4FE834B62EB2572300DF964E /* PunjabAppNewUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PunjabAppNewUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		4F98CF362EC6E0060023B440 /* Exceptions for "PunjabAppNew" folder in "PunjabAppNew" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 4FE8349A2EB2571F00DF964E /* PunjabAppNew */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		4FE8349D2EB2571F00DF964E /* PunjabAppNew */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				4F98CF362EC6E0060023B440 /* Exceptions for "PunjabAppNew" folder in "PunjabAppNew" target */,
+			);
 			path = PunjabAppNew;
 			sourceTree = "<group>";
 		};
@@ -52,6 +77,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4FE834CF2EB2590800DF964E /* FirebaseCrashlytics in Frameworks */,
+				4FE839452EB8AD5A00DF964E /* Alamofire in Frameworks */,
+				4FE834CD2EB2590800DF964E /* FirebaseCore in Frameworks */,
+				4F98CF452EC75AD20023B440 /* ObjectMapper in Frameworks */,
+				4FE834D32EB2590800DF964E /* FirebaseMessaging in Frameworks */,
+				4FE839DE2EB8B9E100DF964E /* Kingfisher in Frameworks */,
+				4FE834D52EB2590800DF964E /* FirebaseRemoteConfig in Frameworks */,
+				4FE834CB2EB2590800DF964E /* FirebaseAuth in Frameworks */,
+				4FE834D12EB2590800DF964E /* FirebaseInAppMessaging-Beta in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +146,15 @@
 			);
 			name = PunjabAppNew;
 			packageProductDependencies = (
+				4FE834CA2EB2590800DF964E /* FirebaseAuth */,
+				4FE834CC2EB2590800DF964E /* FirebaseCore */,
+				4FE834CE2EB2590800DF964E /* FirebaseCrashlytics */,
+				4FE834D02EB2590800DF964E /* FirebaseInAppMessaging-Beta */,
+				4FE834D22EB2590800DF964E /* FirebaseMessaging */,
+				4FE834D42EB2590800DF964E /* FirebaseRemoteConfig */,
+				4FE839442EB8AD5A00DF964E /* Alamofire */,
+				4FE839DD2EB8B9E100DF964E /* Kingfisher */,
+				4F98CF442EC75AD20023B440 /* ObjectMapper */,
 			);
 			productName = PunjabAppNew;
 			productReference = 4FE8349B2EB2571F00DF964E /* PunjabAppNew.app */;
@@ -195,6 +238,13 @@
 			);
 			mainGroup = 4FE834922EB2571F00DF964E;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				4FE834C92EB2590800DF964E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				4FE839432EB8AD5A00DF964E /* XCRemoteSwiftPackageReference "Alamofire" */,
+				4FE839DC2EB8B9E100DF964E /* XCRemoteSwiftPackageReference "Kingfisher" */,
+				4F98CF432EC75AD20023B440 /* XCRemoteSwiftPackageReference "ObjectMapper" */,
+				4FC371202EE5568D004511EA /* XCRemoteSwiftPackageReference "IQKeyboardManager" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 4FE8349C2EB2571F00DF964E /* Products */;
 			projectDirPath = "";
@@ -325,6 +375,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -379,6 +430,7 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				SWIFT_COMPILATION_MODE = wholemodule;
 			};
 			name = Release;
@@ -392,29 +444,31 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"PunjabAppNew/Preview Content\"";
-				DEVELOPMENT_TEAM = CQC28H4WRT;
+				DEVELOPMENT_TEAM = 6DHQR6BNQ5;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PunjabAppNew/Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = "";
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = abc.PunjabAppNew;
+				PRODUCT_BUNDLE_IDENTIFIER = com.PunjabApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
@@ -431,29 +485,31 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"PunjabAppNew/Preview Content\"";
-				DEVELOPMENT_TEAM = CQC28H4WRT;
+				DEVELOPMENT_TEAM = 6DHQR6BNQ5;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PunjabAppNew/Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UILaunchScreen_Generation[sdk=iphonesimulator*]" = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = "";
+				INFOPLIST_KEY_UIRequiresFullScreen = YES;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphoneos*]" = UIStatusBarStyleDefault;
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.2;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = abc.PunjabAppNew;
+				PRODUCT_BUNDLE_IDENTIFIER = com.PunjabApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx xros xrsimulator";
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
@@ -591,6 +647,97 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		4F98CF432EC75AD20023B440 /* XCRemoteSwiftPackageReference "ObjectMapper" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/tristanhimmelman/ObjectMapper";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.4.3;
+			};
+		};
+		4FC371202EE5568D004511EA /* XCRemoteSwiftPackageReference "IQKeyboardManager" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/hackiftekhar/IQKeyboardManager";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.1;
+			};
+		};
+		4FE834C92EB2590800DF964E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.5.0;
+			};
+		};
+		4FE839432EB8AD5A00DF964E /* XCRemoteSwiftPackageReference "Alamofire" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Alamofire/Alamofire.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.10.2;
+			};
+		};
+		4FE839DC2EB8B9E100DF964E /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/onevcat/Kingfisher.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.6.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		4F98CF442EC75AD20023B440 /* ObjectMapper */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4F98CF432EC75AD20023B440 /* XCRemoteSwiftPackageReference "ObjectMapper" */;
+			productName = ObjectMapper;
+		};
+		4FE834CA2EB2590800DF964E /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4FE834C92EB2590800DF964E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		4FE834CC2EB2590800DF964E /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4FE834C92EB2590800DF964E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		4FE834CE2EB2590800DF964E /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4FE834C92EB2590800DF964E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
+		};
+		4FE834D02EB2590800DF964E /* FirebaseInAppMessaging-Beta */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4FE834C92EB2590800DF964E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = "FirebaseInAppMessaging-Beta";
+		};
+		4FE834D22EB2590800DF964E /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4FE834C92EB2590800DF964E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+		4FE834D42EB2590800DF964E /* FirebaseRemoteConfig */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4FE834C92EB2590800DF964E /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseRemoteConfig;
+		};
+		4FE839442EB8AD5A00DF964E /* Alamofire */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4FE839432EB8AD5A00DF964E /* XCRemoteSwiftPackageReference "Alamofire" */;
+			productName = Alamofire;
+		};
+		4FE839DD2EB8B9E100DF964E /* Kingfisher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4FE839DC2EB8B9E100DF964E /* XCRemoteSwiftPackageReference "Kingfisher" */;
+			productName = Kingfisher;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 4FE834932EB2571F00DF964E /* Project object */;
 }
