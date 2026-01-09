@@ -78,20 +78,31 @@ struct ProfileMediaSelectionView: View {
                             print("📱 Posts tab appeared")
                         }
                 } else if selectedView == 1 {
-                    MediaGridView(viewModel: viewModel, posts: viewModel.myphotos, showPlayIcon: false)
+                    MediaGridView(viewModel: viewModel, posts: viewModel.myphotos, showPlayIcon: false, onLoadMore: {
+                        Task { await viewModel.fetchMyPhotos() }
+                    })
                         .onAppear {
                             print("📱 Grid tab appeared - myphotos: \(viewModel.myphotos.count)")
                         }
                 } else if selectedView == 2 {
-                    MediaGridView(viewModel: viewModel, posts: viewModel.myvideos, showPlayIcon: true)
+                    MediaGridView(viewModel: viewModel, posts: viewModel.myvideos, showPlayIcon: true, onLoadMore: {
+                        Task { await viewModel.fetchMyVideos() }
+                    })
                         .onAppear {
                             print("📱 Videos tab appeared - myvideos: \(viewModel.myvideos.count)")
                         }
                 } else if selectedView == 3 {
-                    TaggedView()
+//                    TaggedView()
+//                        .onAppear {
+//                            print("📱 Tagged tab appeared")
+//                        }
+                    MediaGridView(viewModel: viewModel, posts: viewModel.myreels, showPlayIcon: true, onLoadMore: {
+                        Task { await viewModel.fetchMyReels() }
+                    })
                         .onAppear {
-                            print("📱 Tagged tab appeared")
+                            print("📱 Videos tab appeared - myvideos: \(viewModel.myvideos.count)")
                         }
+
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -152,6 +163,11 @@ struct PostsListView: View {
                 LazyVStack(spacing: 0) {
                     ForEach(0 ..< viewModel.myposts.count, id: \.self) { index in
                         MyPostView(viewModel: viewModel, index: index, width: UIScreen.main.bounds.width)
+                            .onAppear {
+                                if index == viewModel.myposts.count - 1 {
+                                    Task { await viewModel.fetchMyPosts() }
+                                }
+                            }
                         DividerView(widthRectangle: UIScreen.main.bounds.width - 15)
                     }
                 }
@@ -217,13 +233,13 @@ struct MyPostView: View {
                 if isVideo(path: file) {
                     if let url = URL(string: file) {
                         VideoPlayer(player: AVPlayer(url: url))
-                            .frame(width: width, height: width * 0.75)
+                            .frame(width: width, height: width * 1.76)
                     }
                 } else {
                     KFImage(URL(string: file))
                         .resizable()
                         .scaledToFill()
-                        .frame(width: width, height: width * 0.75)
+                        .frame(width: width, height: width * 1.25)
                         .clipped()
                 }
             }
@@ -263,6 +279,7 @@ struct MediaGridView: View {
     @ObservedObject var viewModel: FeedViewModel
     let posts: [Post]
     let showPlayIcon: Bool
+    var onLoadMore: (() -> Void)? = nil
     
     @State private var showFullScreenImage = false
     @State private var selectedImageIndex = 0
@@ -317,6 +334,11 @@ struct MediaGridView: View {
                                         }
                                 }
                                 .aspectRatio(1, contentMode: .fit)
+                                .onAppear {
+                                    if index == posts.count - 1 {
+                                        onLoadMore?()
+                                    }
+                                }
                             }
                         } else {
                              MediaGridItem(imageURL: file, isVideo: false)
@@ -324,6 +346,11 @@ struct MediaGridView: View {
                                     if let imgIndex = allImageURLs.firstIndex(of: file) {
                                         selectedImageIndex = imgIndex
                                         showFullScreenImage = true
+                                    }
+                                }
+                                .onAppear {
+                                    if index == posts.count - 1 {
+                                        onLoadMore?()
                                     }
                                 }
                         }
@@ -335,6 +362,11 @@ struct MediaGridView: View {
                                     if let imgIndex = allImageURLs.firstIndex(of: firstImage) {
                                         selectedImageIndex = imgIndex
                                         showFullScreenImage = true
+                                    }
+                                }
+                                .onAppear {
+                                    if index == posts.count - 1 {
+                                        onLoadMore?()
                                     }
                                 }
                         }
@@ -353,10 +385,10 @@ struct MediaGridView: View {
                         selectedVideoItem = nil
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 30))
-                            .foregroundColor(.white)
-                            .padding()
-                            .shadow(radius: 2)
+                        .font(.system(size: 30))
+                        .foregroundColor(.white)
+                        .padding()
+                        .shadow(radius: 2)
                     }
                 }
             }

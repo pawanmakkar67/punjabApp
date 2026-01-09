@@ -17,6 +17,7 @@ struct CreatePostView: View {
     @State private var showCameraPicker: Bool = false
     @State private var showLocationPicker: Bool = false
     @State private var showMusicPicker: Bool = false
+    @State private var showFeelingPicker: Bool = false
     @State private var tempInput: String = ""
     @StateObject private var viewModel: FeedViewModel
     
@@ -76,8 +77,15 @@ struct CreatePostView: View {
                                     Text(viewModel.currentUser?.displayName ?? "User")
                                         .fontWeight(.semibold)
                                     
+                                    if !viewModel.postFeeling.isEmpty {
+                                        Text("is feeling")
+                                            .foregroundStyle(.secondary)
+                                        Text(viewModel.postFeeling)
+                                            .fontWeight(.semibold)
+                                    }
+                                    
                                     if !viewModel.postLocation.isEmpty {
-                                        Text("is at")
+                                        Text("at")
                                             .foregroundStyle(.secondary)
                                         Text(viewModel.postLocation)
                                             .fontWeight(.semibold)
@@ -236,12 +244,15 @@ struct CreatePostView: View {
                     Spacer()
                      // More Options including Music/Location
                     Menu {
-                        Button(action: { showLocationPicker.toggle() }) {
-                            Label("Location", systemImage: "mappin.and.ellipse")
-                        }
-                        Button(action: { showMusicPicker.toggle() }) {
-                            Label("Music", systemImage: "music.note")
-                        }
+                         Button(action: { showLocationPicker.toggle() }) {
+                             Label("Location", systemImage: "mappin.and.ellipse")
+                         }
+                         Button(action: { showFeelingPicker.toggle() }) {
+                             Label("Feeling/Activity", systemImage: "face.smiling")
+                         }
+                         Button(action: { showMusicPicker.toggle() }) {
+                             Label("Music", systemImage: "music.note")
+                         }
                     } label: {
                         Image(systemName: "ellipsis.circle.fill")
                             .foregroundStyle(.gray)
@@ -298,6 +309,10 @@ struct CreatePostView: View {
             }
             .sheet(isPresented: $showMusicPicker) {
                 MusicPickerView(selectedMusic: $viewModel.postMusic)
+            }
+            .sheet(isPresented: $showFeelingPicker) {
+                FeelingPickerView(selectedFeeling: $viewModel.postFeeling)
+                    .presentationDetents([.medium, .large])
             }
             .onChange(of: cameraImage) { newImage in
                 if let image = newImage {

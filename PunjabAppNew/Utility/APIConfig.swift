@@ -38,9 +38,12 @@ enum APIList {
     static let search              = APIConfig.baseAPI + "search"
     static let getFilteredPosts    = APIConfig.baseAPI + "get-filtered-posts"
     static let createStory         = APIConfig.baseAPI + "create-story"
+    static let comments         = APIConfig.baseAPI + "comments"
+    static let new_post               = APIConfig.baseAPI + "new_post"
 
+    
+    
 }
-
 
 
 extension APIList {

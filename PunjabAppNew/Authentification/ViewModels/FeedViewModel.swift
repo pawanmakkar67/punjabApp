@@ -40,6 +40,7 @@ class FeedViewModel: ObservableObject {
     @Published var postLocation: String = ""
     @Published var postPrivacy: String = "Everyone"
     @Published var postMusic: String = ""
+    @Published var postFeeling: String = ""
     var uiImage: UIImage?
     var storyUiImage: UIImage?
     @Published var friends: [User]?
@@ -130,14 +131,106 @@ class FeedViewModel: ObservableObject {
         }
     }
 
-    func uploadPost() async throws {
+    @MainActor
+    func createComment(postID: String, text: String, imageData: Data? = nil) async {
         var params: [String: Any] = [
-            "postText": mindText,
-            "postMap": postLocation,
-            "postPrivacy": postPrivacy,
-            "postMusic": postMusic
+            "post_id": postID,
+            "type": "create",
+            "text": text
         ]
         
+        do {
+            if let data = imageData {
+                params.updateValue(imageData, forKey: "image_url")
+                 let _: ActionResponse = try await APIManager.shared.uploadRequest(
+                    url: APIList.comments,
+                    parameters: params,
+                    data: data,
+                    name: "image_url",
+                    fileName: "comment_image.jpg",
+                    mimeType: "image/jpeg",
+                    model: ActionResponse.self
+                )
+            } else {
+                 let _: ActionResponse = try await APIManager.shared.request(
+                    url: APIList.comments,
+                    parameters: params,
+                    model: ActionResponse.self
+                )
+            }
+        } catch {
+            print("❌ Error creating comment:", error.localizedDescription)
+        }
+    }
+
+    @MainActor
+    func fetchComments(postID: String) async -> [CommentAPIModel] {
+        let params: [String: Any] = [
+            "post_id": postID,
+            "type": "fetch_comments"
+        ]
+        
+        do {
+            let response: CommentsResponse = try await APIManager.shared.request(
+                url: APIList.comments,
+                parameters: params,
+                model: CommentsResponse.self
+            )
+            return response.data ?? []
+        } catch {
+            print("❌ Error fetching comments:", error.localizedDescription)
+            return []
+        }
+    }
+
+    @MainActor
+    func createReply(commentID: String, text: String, imageData: Data? = nil) async {
+        var params: [String: Any] = [
+            "comment_id": commentID,
+            "type": "create_reply",
+            "text": text
+        ]
+        
+        do {
+            if let data = imageData {
+                params.updateValue(data, forKey: "image_url")
+                 let _: ActionResponse = try await APIManager.shared.uploadRequest(
+                    url: APIList.comments,
+                    parameters: params,
+                    data: data,
+                    name: "image_url",
+                    fileName: "reply_image.jpg",
+                    mimeType: "image/jpeg",
+                    model: ActionResponse.self
+                )
+            } else {
+                 let _: ActionResponse = try await APIManager.shared.request(
+                    url: APIList.comments,
+                    parameters: params,
+                    model: ActionResponse.self
+                )
+            }
+        } catch {
+            print("❌ Error creating reply:", error.localizedDescription)
+        }
+    }
+
+    func uploadPost() async throws {
+        var params: [String: Any] = [:]
+
+        if mindText != "" {
+            params["postText"] = mindText
+        }
+
+        if postMusic != "" {
+            params["postMusic"] = postMusic
+        }
+        if postFeeling != "" {
+            params["postFeeling"] = postFeeling
+        }
+        if postLocation != "" {
+            params["postMap"] = postLocation
+        }
         if isReel {
             params["is_reel"] = "1"
         }
@@ -145,7 +238,7 @@ class FeedViewModel: ObservableObject {
         // Determine upload type
         if let video = videoData {
              let _: ActionResponse = try await APIManager.shared.uploadRequest(
-                url: APIList.posts,
+                url: APIList.new_post,
                 parameters: params,
                 data: video,
                 name: "postFile",
@@ -156,7 +249,7 @@ class FeedViewModel: ObservableObject {
         } else if let image = uiImage, createPostSelectedImage != nil {
              guard let imageData = image.jpegData(compressionQuality: 0.5) else { return }
              let _: ActionResponse = try await APIManager.shared.uploadRequest(
-                url: APIList.posts,
+                url: APIList.new_post,
                 parameters: params,
                 data: imageData,
                 name: "postFile",
@@ -167,7 +260,7 @@ class FeedViewModel: ObservableObject {
         } else {
             // Text only
             let _: ActionResponse = try await APIManager.shared.request(
-                 url: APIList.posts,
+                 url: APIList.new_post,
                  parameters: params,
                  model: ActionResponse.self
             )
@@ -184,6 +277,7 @@ class FeedViewModel: ObservableObject {
             self.postLocation = ""
             self.postPrivacy = "Everyone"
             self.postMusic = ""
+            self.postFeeling = ""
             self.isReel = false
         }
         
@@ -390,8 +484,8 @@ class FeedViewModel: ObservableObject {
     
     @MainActor
     func fetchMyPosts() async {
-//        guard !isFetching && hasMorePosts else { return }
-//        isFetching = true
+        guard !isFetching && hasMorePosts else { return }
+        isFetching = true
         
         isLoading = true
         let userID = UserDefaults.getUserID() ?? ""
@@ -454,7 +548,7 @@ class FeedViewModel: ObservableObject {
     @MainActor
     func fetchMyPhotos() async {
         guard !isFetching && hasMorePhotos else { return }
-//        isFetching = true
+        isFetching = true
         
         let userID = UserDefaults.getUserID() ?? ""
         

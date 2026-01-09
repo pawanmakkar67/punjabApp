@@ -30,9 +30,18 @@ final class APIManager {
         var finalURL = url
     
         if let token = UserDefaults.getDeviceToken(), !token.isEmpty {
-            print("access_token ::",token)
+            // print("access_token ::",token)
             finalURL = url + "?access_token=\(token)"
         }
+
+        #if DEBUG
+        print("================ API REQUEST ================")
+        print("URL: \(finalURL)")
+        print("Method: \(method.rawValue)")
+        print("Headers: \(headerData)")
+        print("Params: \(params)")
+        print("============================================")
+        #endif
 
         let responseData = try await performRequest(
             url: finalURL,
@@ -95,6 +104,16 @@ final class APIManager {
         if let token = UserDefaults.getDeviceToken(), !token.isEmpty {
              finalURL = url + "?access_token=\(token)"
         }
+
+        #if DEBUG
+        print("================ UPLOAD REQUEST ================")
+        print("URL: \(finalURL)")
+        print("Method: \(method.rawValue)")
+        print("Headers: \(headerData)")
+        print("Params: \(params)")
+        print("File: \(fileName) (\(mimeType))")
+        print("================================================")
+        #endif
 
         let responseData = try await performUpload(
             url: finalURL,

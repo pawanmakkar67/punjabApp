@@ -1,6 +1,7 @@
 import SwiftUI
 import AVKit
 import Kingfisher
+import PhotosUI
 struct PostView: View {
    
     
@@ -17,14 +18,12 @@ struct PostView: View {
         @State private var showComments: Bool = false
         @State private var showShareSheet: Bool = false
         @State private var commentText: String = ""
-        @State private var comments: [CommentModel] = []
+        @State private var comments: [CommentAPIModel] = []
+        @State private var selectedCommentItem: PhotosPickerItem?
+        @State private var commentImageData: Data?
+        @State private var replyingTo: CommentAPIModel?
 
-    struct CommentModel: Identifiable {
-        let id = UUID()
-        let username: String
-        let text: String
-        let timestamp: Date
-    }
+
     
     var body: some View {
         if index < 0 || index >= viewModel.posts.count {
@@ -57,6 +56,12 @@ struct PostView: View {
                    !file.isEmpty {
                     AutoCarousel(photos: file)
                 }
+                
+                // MARK: --- MAP
+                if let location = viewModel.posts[index].postMap, !location.isEmpty {
+                    PostMapView(locationName: location)
+                        .padding(.horizontal)
+                }
                 footerView
                     .frame(maxWidth: width)
                 
@@ -75,7 +80,7 @@ struct PostView: View {
     private func videoPlayer(_ filePath: String) -> some View {
         if let url = URL(string: filePath) {
             VideoPlayer(player: player)
-                .frame(width: width, height: width * 0.75)
+                .frame(width: width, height: width * 1.76)
                 .onAppear {
                     if player == nil {
                         player = AVPlayer(url: url)
@@ -106,7 +111,7 @@ struct PostView: View {
         KFImage(URL(string: filePath))
             .resizable()
             .scaledToFill()
-            .frame(width: width, height: width * 0.75)
+            .frame(width: width, height: width * 1.25 )
             .clipped()
     }
     
@@ -336,79 +341,206 @@ struct PostView: View {
     var commentSheet: some View {
         VStack(spacing: 0) {
             // Header
-            HStack {
-                Text("Comments")
-                    .font(.headline)
-                Spacer()
-                Button(action: { showComments = false }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 24))
-                        .foregroundColor(.gray)
+            VStack(alignment: .leading, spacing: 0) {
+                HStack {
+                    Text("Comments")
+                        .font(.headline)
+                    Spacer()
+                    Button(action: { showComments = false }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(.gray)
+                    }
                 }
+                .padding()
             }
-            .padding()
             .background(Color(UIColor.systemGray6))
+            .onAppear {
+                fetchComments()
+            }
             
             // Comments List
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 16) {
                     ForEach(comments) { comment in
                         HStack(alignment: .top, spacing: 12) {
-                            Circle()
-                                .fill(Color.gray)
+                            KFImage(URL(string: comment.userData?.avatar ?? ""))
+                                .resizable()
+                                .scaledToFill()
                                 .frame(width: 32, height: 32)
+                                .clipShape(Circle())
                             
                             VStack(alignment: .leading, spacing: 4) {
-                                Text(comment.username)
+                                Text(comment.userData?.username ?? "User")
                                     .font(.subheadline)
                                     .fontWeight(.semibold)
                                 
-                                Text(comment.text)
+                                Text(comment.text ?? "")
                                     .font(.body)
                                 
-                                Text(comment.timestamp, style: .relative)
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
+                                if let time = comment.time {
+                                    Text(time)
+                                        .font(.caption)
+                                        .foregroundColor(.gray)
+                                }
+                                
+                                Button(action: {
+                                    replyingTo = comment
+                                }) {
+                                    Text("Reply")
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.gray)
+                                }
                             }
                         }
                         .padding(.horizontal)
+                        
+                        // Replies
+                        if let replies = comment.replies, !replies.isEmpty {
+                            ForEach(replies) { reply in
+                                HStack(alignment: .top, spacing: 12) {
+                                    KFImage(URL(string: reply.userData?.avatar ?? ""))
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 24, height: 24)
+                                        .clipShape(Circle())
+                                    
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(reply.userData?.username ?? "User")
+                                            .font(.caption)
+                                            .fontWeight(.semibold)
+                                        
+                                        Text(reply.text ?? "")
+                                            .font(.caption)
+                                        
+                                        if let time = reply.time {
+                                            Text(time)
+                                                .font(.caption2)
+                                                .foregroundColor(.gray)
+                                        }
+                                    }
+                                }
+                                .padding(.leading, 50) // Indent replies
+                                .padding(.horizontal)
+                            }
+                        }
                     }
                 }
                 .padding(.vertical)
             }
             
             // Input Area
-            HStack(spacing: 12) {
-                TextField("Write a comment...", text: $commentText)
-                    .padding(10)
-                    .background(Color(UIColor.systemGray6))
-                    .cornerRadius(20)
-                    .submitLabel(.send)
-                    .onSubmit(postComment)
-                
-                Button(action: postComment) {
-                    Image(systemName: "paperplane.fill")
-                        .font(.system(size: 20))
-                        .foregroundColor(.blue)
+            VStack {
+                if let replying = replyingTo {
+                    HStack {
+                        Text("Replying to \(replying.userData?.username ?? "User")")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                        Spacer()
+                        Button(action: { replyingTo = nil }) {
+                            Image(systemName: "xmark")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+                    }
+                    .padding(.horizontal)
+                    .transition(.opacity)
                 }
-                .disabled(commentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                
+                if let data = commentImageData, let uiImage = UIImage(data: data) {
+                    HStack {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 80, height: 80)
+                            .cornerRadius(8)
+                            .clipped()
+                        
+                        Button(action: {
+                            selectedCommentItem = nil
+                            commentImageData = nil
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.gray)
+                                .font(.title3)
+                        }
+                        Spacer()
+                    }
+                    .padding(.horizontal)
+                }
+                
+                HStack(spacing: 12) {
+                    PhotosPicker(selection: $selectedCommentItem, matching: .images) {
+                        Image(systemName: "photo.on.rectangle")
+                            .font(.system(size: 22))
+                            .foregroundColor(.gray)
+                    }
+                    
+                    TextField("Write a comment...", text: $commentText)
+                        .padding(10)
+                        .background(Color(UIColor.systemGray6))
+                        .cornerRadius(20)
+                        .submitLabel(.send)
+                        .onSubmit(postComment)
+                    
+                    Button(action: postComment) {
+                        Image(systemName: "paperplane.fill")
+                            .font(.system(size: 20))
+                            .foregroundColor(.blue)
+                    }
+                    .disabled(commentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && commentImageData == nil)
+                }
+                .padding()
             }
-            .padding()
+            .onChange(of: selectedCommentItem) { newItem in
+                Task {
+                    if let data = try? await newItem?.loadTransferable(type: Data.self) {
+                        await MainActor.run {
+                            commentImageData = data
+                        }
+                    }
+                }
+            }
         }
     }
     
     private func postComment() {
-        guard !commentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        guard !commentText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || commentImageData != nil else { return }
         
-        let newComment = CommentModel(
-            username: "You",
-            text: commentText,
-            timestamp: Date()
-        )
+        // Note: Real apps usually wait for server response or use optimistic update with a temporary ID.
+        // For now, we clear input and fetch comments again after a delay or just rely on the user to pull to refresh if we implemented that.
+        // Or we can manually append a fake model.
         
-        withAnimation {
-            comments.append(newComment)
-            commentText = ""
+        let pid = viewModel.posts[index].post_id ?? viewModel.posts[index].id ?? ""
+        let text = commentText
+        let image = commentImageData
+        
+        let currentReply = replyingTo
+        
+        commentText = ""
+        selectedCommentItem = nil
+        commentImageData = nil
+        replyingTo = nil
+        
+        Task {
+            if let replyComment = currentReply {
+                await viewModel.createReply(commentID: replyComment.id ?? "", text: text, imageData: image)
+            } else {
+                await viewModel.createComment(postID: pid, text: text, imageData: image)
+            }
+            await fetchComments() // Refresh list
+        }
+    }
+    
+    private func fetchComments() {
+        let pid = viewModel.posts[index].post_id ?? viewModel.posts[index].id ?? ""
+        guard !pid.isEmpty else { return }
+        Task {
+            let fetched = await viewModel.fetchComments(postID: pid)
+            withAnimation {
+                comments = fetched
+            }
         }
     }
 }
