@@ -40,6 +40,8 @@ enum APIList {
     static let createStory         = APIConfig.baseAPI + "create-story"
     static let comments         = APIConfig.baseAPI + "comments"
     static let new_post               = APIConfig.baseAPI + "new_post"
+    static let getReels               = APIConfig.baseAPI + "get-reels"
+    static let followUser             = APIConfig.baseAPI + "follow-user"
 
     
     

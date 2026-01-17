@@ -396,6 +396,111 @@ struct MediaGridView: View {
     }
 }
 
+//
+//struct MediaGridVideoView: View {
+//    @ObservedObject var viewModel: FeedViewModel
+//    let posts: [ReelsData]
+//    let showPlayIcon: Bool
+//    var onLoadMore: (() -> Void)? = nil
+//    
+//    @State private var showFullScreenImage = false
+//    @State private var selectedImageIndex = 0
+//    @State private var selectedVideoItem: VideoWrapper?
+//
+//    var allImageURLs: [String] {
+//        var urls: [String] = []
+//        for post in posts {
+//            if let file = post.postFile_full, !file.isEmpty, !isVideo(path: file) {
+//                urls.append(file)
+//            }
+//            
+//        }
+//        return urls
+//    }
+//
+//    var body: some View {
+//        if posts.isEmpty {
+//            VStack {
+//                 Spacer()
+//                    .frame(height: 50)
+//                 Text("No Media")
+//                    .foregroundColor(.gray)
+//                 Spacer()
+//            }
+//        } else {
+//            LazyVGrid(columns: [
+//                GridItem(.flexible(), spacing: 2),
+//                GridItem(.flexible(), spacing: 2),
+//                GridItem(.flexible(), spacing: 2)
+//            ], spacing: 2) {
+//                ForEach(posts.indices, id: \.self) { index in
+//                    if let file = posts[index].postFile_full, !file.isEmpty {
+//                        if isVideo(path: file) {
+//                            if let videoURL = URL(string: file) {
+//                                let thumbURL: URL? = {
+//                                    if let thumb = posts[index].postFile_full, !thumb.isEmpty {
+//                                        return URL(string: thumb)
+//                                    }
+//                                    return nil
+//                                }()
+//                                GeometryReader { geometry in
+//                                    VideoThumbnailView(videoURL: videoURL, previewURL: thumbURL)
+//                                        .frame(width: geometry.size.width, height: geometry.size.width)
+//                                        .clipped()
+//                                        .onTapGesture {
+//                                            print("▶️ Tapped video: \(videoURL)")
+//                                            selectedVideoItem = VideoWrapper(url: videoURL)
+//                                        }
+//                                }
+//                                .aspectRatio(1, contentMode: .fit)
+//                                .onAppear {
+//                                    if index == posts.count - 1 {
+//                                        onLoadMore?()
+//                                    }
+//                                }
+//                            }
+//                        } else {
+//                             MediaGridItem(imageURL: file, isVideo: false)
+//                                .onTapGesture {
+//                                    if let imgIndex = allImageURLs.firstIndex(of: file) {
+//                                        selectedImageIndex = imgIndex
+//                                        showFullScreenImage = true
+//                                    }
+//                                }
+//                                .onAppear {
+//                                    if index == posts.count - 1 {
+//                                        onLoadMore?()
+//                                    }
+//                                }
+//                        }
+//                    }
+//
+//                }
+//            }
+//            .fullScreenCover(isPresented: $showFullScreenImage) {
+//                FullScreenImageView(imageURLs: allImageURLs, selectedIndex: $selectedImageIndex)
+//            }
+//            .sheet(item: $selectedVideoItem) { item in
+//                ZStack(alignment: .topTrailing) {
+//                    VideoPlayer(player: AVPlayer(url: item.url))
+//                        .ignoresSafeArea()
+//                    
+//                    Button {
+//                        selectedVideoItem = nil
+//                    } label: {
+//                        Image(systemName: "xmark.circle.fill")
+//                        .font(.system(size: 30))
+//                        .foregroundColor(.white)
+//                        .padding()
+//                        .shadow(radius: 2)
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
+
+
 struct VideoWrapper: Identifiable {
     let id = UUID()
     let url: URL

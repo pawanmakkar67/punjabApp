@@ -30,6 +30,37 @@ struct NearbyModel : Mappable {
 
 }
 
+struct FriendsModel : Mappable {
+    var api_status : Int?
+    var data : FriendsData?
+
+    init?(map: Map) {
+
+    }
+
+    mutating func mapping(map: Map) {
+
+        api_status <- map["api_status"]
+        data <- map["data"]
+    }
+
+}
+struct FriendsData : Mappable {
+    var following : [User_data]?
+    var followers : [User_data]?
+
+    init?(map: Map) {
+
+    }
+
+    mutating func mapping(map: Map) {
+
+        following <- map["following"]
+        followers <- map["followers"]
+    }
+
+}
+
 
 struct NearbyData : Mappable {
 	var user_id : String?

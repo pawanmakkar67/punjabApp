@@ -61,6 +61,10 @@ class FeedViewModel: ObservableObject {
     @Published var hasMorePhotos = true
     @Published var hasMoreVideos = true
     @Published var hasMoreReels = true
+    @Published var reels = [ReelsData]()
+    @Published var hasMoreGlobalReels = true
+    @Published var followingList = [User_data]()
+    @Published var followersList = [User_data]()
 
     @Published private(set) var isFetching = false
     @Published var focusedIndex: Int? = nil
@@ -704,6 +708,130 @@ class FeedViewModel: ObservableObject {
         isFetching = false
     }
     
+    @MainActor
+    func fetchReels() async {
+        guard !isFetching && hasMoreGlobalReels else { return }
+        isFetching = true
+        
+        var params: [String: Any] = [
+            "limit": "20"
+        ]
+        
+        if let lastID = reels.last?.id {
+            params["after_post_id"] = lastID
+        }
+
+        do {
+            // Move API call off main thread
+            let result: ReelsModel = try await withCheckedThrowingContinuation { continuation in
+                Task.detached {
+                    do {
+                        let res: ReelsModel = try await APIManager.shared.request(
+                            url: APIList.getReels,
+                            parameters: params,
+                            model: ReelsModel.self
+                        )
+                        continuation.resume(returning: res)
+                    } catch {
+                        continuation.resume(throwing: error)
+                    }
+                }
+            }
+
+            if result.status == 200 {
+                if let newPosts = result.data, !newPosts.isEmpty {
+                    // UI update back on main
+                    await MainActor.run {
+                        reels.append(contentsOf: newPosts)
+                        print("🎬 Fetched \(newPosts.count) reels")
+                    }
+                } else {
+                    hasMoreGlobalReels = false
+                    print("🎬 No more reels")
+                }
+            }
+
+        } catch {
+            print("❌ Error fetching reels:", error.localizedDescription)
+        }
+
+        isFetching = false
+    }
+
+    @MainActor
+    func fetchFollowing() async {
+        let userID = UserDefaults.getUserID() ?? ""
+        
+        let params: [String: Any] = [
+            "user_id": userID,
+            "type": "following"
+        ]
+        
+        do {
+            let result: FriendsModel = try await withCheckedThrowingContinuation { continuation in
+                Task.detached {
+                    do {
+                        let res: FriendsModel = try await APIManager.shared.request(
+                            url: APIList.sendFriendRequest,
+                            parameters: params,
+                            model: FriendsModel.self
+                        )
+                        continuation.resume(returning: res)
+                    } catch {
+                        continuation.resume(throwing: error)
+                    }
+                }
+            }
+            
+            if result.api_status == 200 {
+                if let users = result.data?.following {
+                    await MainActor.run {
+                        followingList = users
+                    }
+                }
+            }
+        } catch {
+            print("❌ Error fetching following list:", error.localizedDescription)
+        }
+    }
+
+    @MainActor
+    func fetchFollowers() async {
+        let userID = UserDefaults.getUserID() ?? ""
+        
+        let params: [String: Any] = [
+            "user_id": userID,
+            "type": "followers"
+        ]
+        
+        do {
+            let result: FriendsModel = try await withCheckedThrowingContinuation { continuation in
+                Task.detached {
+                    do {
+                        let res: FriendsModel = try await APIManager.shared.request(
+                            url: APIList.sendFriendRequest,
+                            parameters: params,
+                            model: FriendsModel.self
+                        )
+                        continuation.resume(returning: res)
+                    } catch {
+                        continuation.resume(throwing: error)
+                    }
+                }
+            }
+            
+            if result.api_status == 200 {
+                if let users = result.data?.followers {
+                    await MainActor.run {
+                        followersList = users
+                    }
+                }
+            }
+        } catch {
+            print("❌ Error fetching followers list:", error.localizedDescription)
+        }
+    }
+    
     
     @MainActor
     func fetchStories() async {
@@ -773,4 +901,40 @@ class FeedViewModel: ObservableObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: item)
     }
 
+    @MainActor
+    func followUser(userID: String) async {
+        let params: [String: Any] = [
+            "user_id": userID
+        ]
+        
+        do {
+            let _: BaseActionResponse = try await APIManager.shared.request(
+                url: APIList.followUser,
+                parameters: params,
+                model: BaseActionResponse.self
+            )
+            print("✅ Followed user \(userID)")
+            // Update local list to reflect change (optimistic update)
+            if let index = followersList.firstIndex(where: { $0.user_id == userID }) {
+                followersList[index].is_following = 1
+            }
+            if let index = followingList.firstIndex(where: { $0.user_id == userID }) {
+                followingList[index].is_following = 1
+            }
+        } catch {
+            print("❌ Error following user:", error.localizedDescription)
+        }
+    }
+}
+
+struct BaseActionResponse: Mappable {
+    var api_status: Int?
+    var action: String?
+    
+    init?(map: Map) {}
+    
+    mutating func mapping(map: Map) {
+        api_status <- map["api_status"]
+        action <- map["action"]
+    }
 }

@@ -53,14 +53,25 @@ struct FriendsView: View {
         }
     }
     
-    var filteredFriends: [User] {
-        guard let friends = viewModel.friends else { return [] }
+    var filteredFollowing: [User_data] {
         if searchText.isEmpty {
-            return friends
+            return viewModel.followingList
         }
-        return friends.filter { friend in
-            let fullName = "\(friend.firstName ?? "") \(friend.familyName ?? "")".lowercased()
-            return fullName.contains(searchText.lowercased())
+        return viewModel.followingList.filter { user in
+            let fullName = "\(user.first_name ?? "") \(user.last_name ?? "")".lowercased()
+             let username = (user.username ?? "").lowercased()
+            return fullName.contains(searchText.lowercased()) || username.contains(searchText.lowercased())
+        }
+    }
+    
+    var filteredFollowers: [User_data] {
+        if searchText.isEmpty {
+            return viewModel.followersList
+        }
+        return viewModel.followersList.filter { user in
+            let fullName = "\(user.first_name ?? "") \(user.last_name ?? "")".lowercased()
+             let username = (user.username ?? "").lowercased()
+            return fullName.contains(searchText.lowercased()) || username.contains(searchText.lowercased())
         }
     }
     
@@ -115,8 +126,11 @@ struct FriendsView: View {
                                 withAnimation { selectedTab = 2 }
                             }
                             
-                            TabButton(title: "Friends", isSelected: selectedTab == 3) {
+                            TabButton(title: "Following", isSelected: selectedTab == 3) {
                                 withAnimation { selectedTab = 3 }
+                            }
+                            TabButton(title: "Followers", isSelected: selectedTab == 4) {
+                                withAnimation { selectedTab = 4 }
                             }
                         }
                         .padding(.horizontal)
@@ -180,86 +194,115 @@ struct FriendsView: View {
                 } else {
                     // Normal Tab View
                     TabView(selection: $selectedTab) {
-                    // Pending Requests Tab
-                    ScrollView {
-                        LazyVStack(spacing: 16) {
-                            if filteredPendingRequests.isEmpty {
-                                EmptyStateView(
-                                    icon: "person.crop.circle.badge.plus",
-                                    message: searchText.isEmpty ? "No pending friend requests" : "No results found"
-                                )
-                            } else {
-                                ForEach(filteredPendingRequests, id: \.user_id) { user in
-                                    FriendRequestRow(user: user, onConfirm: {
-                                        confirmRequest(user)
-                                    }, onDelete: {
-                                        deleteRequest(user)
-                                    })
+                        // Pending Requests Tab
+                        ScrollView {
+                            LazyVStack(spacing: 16) {
+                                if filteredPendingRequests.isEmpty {
+                                    EmptyStateView(
+                                        icon: "person.crop.circle.badge.plus",
+                                        message: searchText.isEmpty ? "No pending friend requests" : "No results found"
+                                    )
+                                } else {
+                                    ForEach(filteredPendingRequests, id: \.user_id) { user in
+                                        FriendRequestRow(user: user, onConfirm: {
+                                            confirmRequest(user)
+                                        }, onDelete: {
+                                            deleteRequest(user)
+                                        })
+                                    }
                                 }
                             }
+                            .padding()
                         }
-                        .padding()
-                    }
-                    .tag(0)
-                    
-                    // Sent Requests Tab
-                    ScrollView {
-                        LazyVStack(spacing: 16) {
-                            if filteredSentRequests.isEmpty {
-                                EmptyStateView(
-                                    icon: "paperplane.circle.fill",
-                                    message: searchText.isEmpty ? "No sent friend requests" : "No results found"
-                                )
-                            } else {
-                                ForEach(filteredSentRequests, id: \.user_id) { user in
-                                    SentRequestRow(user: user, onCancel: {
-                                        cancelSentRequest(user)
-                                    })
+                        .tag(0)
+                        
+                        // Sent Requests Tab
+                        ScrollView {
+                            LazyVStack(spacing: 16) {
+                                if filteredSentRequests.isEmpty {
+                                    EmptyStateView(
+                                        icon: "paperplane.circle.fill",
+                                        message: searchText.isEmpty ? "No sent friend requests" : "No results found"
+                                    )
+                                } else {
+                                    ForEach(filteredSentRequests, id: \.user_id) { user in
+                                        SentRequestRow(user: user, onCancel: {
+                                            cancelSentRequest(user)
+                                        })
+                                    }
                                 }
                             }
+                            .padding()
                         }
-                        .padding()
-                    }
-                    .tag(1)
-                    
-                    // Nearby Friends Tab
-                    ScrollView {
-                        LazyVStack(spacing: 16) {
-                            if filteredNearbyFriends.isEmpty {
-                                EmptyStateView(
-                                    icon: "location.circle.fill",
-                                    message: searchText.isEmpty ? "No nearby friends found" : "No results found"
-                                )
-                            } else {
-                                ForEach(filteredNearbyFriends, id: \.user_id) { user in
-                                    NearbyFriendRow(user: user, onAddFriend: {
-                                        sendFriendRequest(user)
-                                    })
+                        .tag(1)
+                        
+                        // Nearby Friends Tab
+                        ScrollView {
+                            LazyVStack(spacing: 16) {
+                                if filteredNearbyFriends.isEmpty {
+                                    EmptyStateView(
+                                        icon: "location.circle.fill",
+                                        message: searchText.isEmpty ? "No nearby friends found" : "No results found"
+                                    )
+                                } else {
+                                    ForEach(filteredNearbyFriends, id: \.user_id) { user in
+                                        NearbyFriendRow(user: user, onAddFriend: {
+                                            sendFriendRequest(user)
+                                        })
+                                    }
                                 }
                             }
+                            .padding()
                         }
-                        .padding()
-                    }
-                    .tag(2)
-                    
-                    // Your Friends Tab
-                    ScrollView {
-                        LazyVStack(spacing: 16) {
-                            if !filteredFriends.isEmpty {
-                                ForEach(filteredFriends) { friend in
-                                    FriendRow(friend: friend)
+                        .tag(2)
+                        
+                        // Your Friends (Following) Tab
+                        ScrollView {
+                            LazyVStack(spacing: 16) {
+                                if !filteredFollowing.isEmpty {
+                                    ForEach(filteredFollowing, id: \.user_id) { user in
+                                        UserRow(user: user)
+                                    }
+                                } else {
+                                    EmptyStateView(
+                                        icon: "person.2.fill",
+                                        message: searchText.isEmpty ? "No friends yet" : "No results found"
+                                    )
                                 }
-                            } else {
-                                EmptyStateView(
-                                    icon: "person.2.fill",
-                                    message: searchText.isEmpty ? "No friends yet" : "No results found"
-                                )
                             }
+                            .padding()
                         }
-                        .padding()
+                        .tag(3)
+                        .onAppear {
+                            Task { await viewModel.fetchFollowing() }
+                        }
+                        
+                        // Followers Tab
+                        ScrollView {
+                            LazyVStack(spacing: 16) {
+                                if !filteredFollowers.isEmpty {
+                                    ForEach(filteredFollowers, id: \.user_id) { user in
+                                        UserRow(user: user, onFollow: {
+                                            if let id = user.user_id {
+                                                Task { await viewModel.followUser(userID: id) }
+                                            }
+                                        })
+                                    }
+                                } else {
+                                    EmptyStateView(
+                                        icon: "person.2.fill",
+                                        message: searchText.isEmpty ? "No followers yet" : "No results found"
+                                    )
+                                }
+                            }
+                            .padding()
+                        }
+                        .tag(4)
+                        .onAppear {
+                            Task { await viewModel.fetchFollowers() }
+                        }
+
                     }
-                    .tag(3)
-                }
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 }
             }
@@ -577,6 +620,55 @@ struct FriendRow: View {
 
 #Preview {
     FriendsView()
+}
+
+struct UserRow: View {
+    let user: User_data
+    var onFollow: (() -> Void)? = nil
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            KFImage(URL(string: user.avatar ?? ""))
+                .resizable()
+                .scaledToFill()
+                .frame(width: 60, height: 60)
+                .clipShape(Circle())
+//                .placeholder {
+//                    Image(systemName: "person.circle.fill")
+//                        .resizable()
+//                        .frame(width: 60, height: 60)
+//                        .foregroundColor(.gray)
+//                }
+            
+            VStack(alignment: .leading) {
+                Text(user.displayName)
+                    .font(.headline)
+                if let username = user.username {
+                    Text("@\(username)")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                }
+            }
+            Spacer()
+            
+            if (user.is_following ?? 1) == 0 {
+                Button(action: {
+                    onFollow?()
+                }) {
+                    Text((user.is_following_me ?? 0) == 1 ? "Follow back" : "Follow")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 6)
+                        .background(Color.blue)
+                        .cornerRadius(16)
+                }
+            } else {
+                Image(systemName: "ellipsis")
+                    .foregroundColor(.gray)
+            }
+        }
+    }
 }
 
 
