@@ -7,9 +7,10 @@
 //
 
 import SwiftUI
-import UIKit // Added for UIViewControllerRepresentable types
+import UIKit
 import PhotosUI
 import AVFoundation
+import AVKit
 import PencilKit
 import CoreImage
 import CoreImage.CIFilterBuiltins
@@ -18,8 +19,11 @@ struct CreateStoryView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var viewModel: FeedViewModel
     
-    // Camera Logic
-    @StateObject private var cameraService = CameraService()
+    // AR ViewModel
+    @StateObject private var faceTrackingViewModel = FaceTrackingViewModel()
+    
+    // Legacy Camera (Keep if needed for fallback, but main focus is AR)
+    @StateObject private var cameraService = CameraService() 
     
     // UI State
     @State private var showPhotoPicker: Bool = false
@@ -31,28 +35,12 @@ struct CreateStoryView: View {
     @State private var currentText: String = ""
     @State private var texts: [StoryText] = []
     
-    // --- FILTERS STATE ---
-    @State private var currentFilterIndex: Int = 0
-    let filters: [FilterType] = [
-        .original, .sepia, .monochrome, .vignette, .instant
-    ]
-    
     struct StoryText: Identifiable {
         let id = UUID()
         var text: String
         var color: Color = .white
         var offset: CGSize = .zero
         var lastOffset: CGSize = .zero
-    }
-    
-    enum FilterType: String, CaseIterable, Identifiable {
-        case original = "Original"
-        case sepia = "Sepia"
-        case monochrome = "B&W"
-        case vignette = "Vintage"
-        case instant = "Instant"
-        
-        var id: String { self.rawValue }
     }
     
     // Tools Model
@@ -87,16 +75,20 @@ struct CreateStoryView: View {
             // MARK: - Layer 1: Media (Camera or Image)
             ZStack {
                 if let image = getBaseImage() {
-                    // --- Captured/Edit Mode ---
-                    Image(uiImage: applyFilter(to: image, filter: filters[currentFilterIndex]))
+                    // --- Captured/Edit Mode (Photo) ---
+                    Image(uiImage: image)
                         .resizable()
                         .scaledToFill()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .clipped()
                         .ignoresSafeArea()
+                } else if let videoURL = faceTrackingViewModel.capturedVideoURL {
+                    // --- Captured/Edit Mode (Video) ---
+                    StoryVideoPlayer(url: videoURL)
+                        .ignoresSafeArea()
                 } else {
-                    // --- Live Camera Mode ---
-                    StoryCameraWrapper(cameraService: cameraService)
+                    // --- Live Camera Mode (AR) ---
+                    ARStoryCameraView(viewModel: faceTrackingViewModel)
                         .ignoresSafeArea()
                 }
             }
@@ -189,22 +181,14 @@ struct CreateStoryView: View {
                                 }
                             }
                         } else {
-                            // Camera Tools: Flash, Switch, Music
-                            Button {
-                                cameraService.switchCamera()
-                            } label: {
-                                Image(systemName: "arrow.triangle.2.circlepath.camera")
-                                    .font(.title2)
-                                    .foregroundStyle(.white)
-                            }
-                            
-                            Button {
-                                cameraService.toggleFlash()
-                            } label: {
-                                Image(systemName: cameraService.flashMode == .off ? "bolt.slash.fill" : "bolt.fill")
-                                    .font(.title2)
-                                    .foregroundStyle(cameraService.flashMode == .off ? .white : .yellow)
-                            }
+                            // Camera Tools: Switch (Flash not available in ARFaceTracking usually)
+//                            Button {
+//                                // Switch Camera Logic (ARKit usually defaults to front)
+//                            } label: {
+//                                Image(systemName: "arrow.triangle.2.circlepath.camera")
+//                                    .font(.title2)
+//                                    .foregroundStyle(.white)
+//                            }
                         }
                     }
                     .padding(.top)
@@ -266,23 +250,27 @@ struct CreateStoryView: View {
                 } else {
                     // --- CAMERA MODE BOTTOM ---
                     VStack(spacing: 20) {
-                        // Filters
+                        // AR Filters
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 15) {
-                                ForEach(filters.indices, id: \.self) { i in
-                                    Circle()
-                                        .strokeBorder(Color.white, lineWidth: currentFilterIndex == i ? 3 : 1)
-                                        .background(Circle().fill(Color.white.opacity(0.2)))
-                                        .frame(width: 50, height: 50)
-                                        .overlay(Text(filters[i].rawValue.prefix(1)).font(.caption).foregroundStyle(.white))
+                                ForEach(faceTrackingViewModel.allFilters.indices, id: \.self) { i in
+                                    let filter = faceTrackingViewModel.allFilters[i]
+                                    let isSelected = faceTrackingViewModel.selectedFilterIndex == i
+                                    
+                                    Image(filter.imageName) // Ensure these images exist in Assets
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 60, height: 60)
+                                        .clipShape(Circle())
+                                        .overlay(Circle().stroke(Color.white, lineWidth: isSelected ? 3 : 0))
                                         .onTapGesture {
-                                            currentFilterIndex = i
+                                            faceTrackingViewModel.selectFilter(at: i)
                                         }
                                 }
                             }
                             .padding(.horizontal)
                         }
-                        .frame(height: 60)
+                        .frame(height: 70)
                         
                         // Shutter / Capture Area
                         HStack {
@@ -291,9 +279,40 @@ struct CreateStoryView: View {
                             }
                             Spacer()
                             
-                            // SwiftyRecordButton Wrapper
-                            SwiftyRecordButtonWrapper(cameraService: cameraService)
-                                .frame(width: 80, height: 80)
+                            // Shutter Button
+                            ZStack {
+                                Circle()
+                                    .stroke(Color.white, lineWidth: 4)
+                                    .frame(width: 80, height: 80)
+                                Circle()
+                                    .fill(faceTrackingViewModel.isRecording ? Color.red : Color.white)
+                                    .frame(width: faceTrackingViewModel.isRecording ? 40 : 70, height: faceTrackingViewModel.isRecording ? 40 : 70)
+                                    .animation(.easeInOut(duration: 0.2), value: faceTrackingViewModel.isRecording)
+                            }
+                            .simultaneousGesture(
+                                LongPressGesture(minimumDuration: 0.5).onEnded { _ in
+                                    if !faceTrackingViewModel.isRecording {
+                                        faceTrackingViewModel.startRecording()
+                                    }
+                                }
+                            )
+                            .simultaneousGesture(
+                                DragGesture(minimumDistance: 0)
+                                    .onEnded { _ in
+                                        if faceTrackingViewModel.isRecording {
+                                            faceTrackingViewModel.stopRecording { url in
+                                                if let url = url {
+                                                    DispatchQueue.main.async {
+                                                        faceTrackingViewModel.capturedVideoURL = url
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            // Tap behavior (captured before LongPress triggered)
+                                            faceTrackingViewModel.triggerCapture?()
+                                        }
+                                    }
+                            )
                             
                             Spacer()
                             Button {} label: { Image(systemName: "face.smiling").font(.title).foregroundStyle(.white) }
@@ -304,30 +323,31 @@ struct CreateStoryView: View {
             } // End Layer 4
         }
         .photosPicker(isPresented: $showPhotoPicker, selection: $viewModel.createStorySelectedImage)
-        .onAppear { cameraService.checkPermission() }
     }
     
     // --- HELPERS ---
     
     var hasMedia: Bool {
-        cameraService.capturedImage != nil || viewModel.createStorySelectedImage != nil
+        faceTrackingViewModel.capturedImage != nil ||
+        faceTrackingViewModel.capturedVideoURL != nil ||
+        viewModel.createStorySelectedImage != nil
     }
     
     func getBaseImage() -> UIImage? {
-        if let captured = cameraService.capturedImage { return captured }
+        if let captured = faceTrackingViewModel.capturedImage { return captured }
         if let picked = viewModel.createStorySelectedImage, let uiImg = viewModel.uiImage { return uiImg }
         return nil
     }
     
     func clearMedia() {
-        cameraService.retake()
+        faceTrackingViewModel.capturedImage = nil
+        faceTrackingViewModel.capturedVideoURL = nil
         viewModel.createStorySelectedImage = nil
         viewModel.uiImage = nil
         // Reset tools
         canvasView.drawing = PKDrawing()
         texts.removeAll()
         isDrawing = false
-        currentFilterIndex = 0
     }
     
     func handleTool(_ action: ToolAction) {
@@ -352,56 +372,19 @@ struct CreateStoryView: View {
         showTextEditor = false
     }
     
-    func applyFilter(to inputImage: UIImage, filter: FilterType) -> UIImage {
-        // Basic filter logic
-        if filter == .original { return inputImage }
-        
-        let context = CIContext()
-        guard let ciImage = CIImage(image: inputImage) else { return inputImage }
-        
-        var ciFilter: CIFilter?
-        
-        switch filter {
-        case .sepia:
-            ciFilter = CIFilter.sepiaTone()
-            ciFilter?.setValue(ciImage, forKey: kCIInputImageKey)
-            ciFilter?.setValue(0.8, forKey: kCIInputIntensityKey)
-        case .monochrome:
-            ciFilter = CIFilter.photoEffectMono()
-            ciFilter?.setValue(ciImage, forKey: kCIInputImageKey)
-        case .vignette:
-            ciFilter = CIFilter.vignette()
-            ciFilter?.setValue(ciImage, forKey: kCIInputImageKey)
-            ciFilter?.setValue(1.0, forKey: kCIInputIntensityKey)
-        case .instant:
-            ciFilter = CIFilter.photoEffectInstant()
-            ciFilter?.setValue(ciImage, forKey: kCIInputImageKey)
-        default: break
-        }
-        
-        if let output = ciFilter?.outputImage,
-           let cgImage = context.createCGImage(output, from: output.extent) {
-            return UIImage(cgImage: cgImage)
-        }
-        return inputImage
-    }
-    
     private func postStory() {
+        // Handle Video Upload
+        if let videoURL = faceTrackingViewModel.capturedVideoURL {
+             Task {
+                 print("Video Upload from Story: \(videoURL)")
+                 // TODO: Integrate actual video upload
+                 dismiss()
+             }
+             return
+        }
+        
         guard let base = getBaseImage() else { return }
-        
-        // Render layers logic would go here (merge View + Canvas + Text into one Image).
-        // For now, we upload the base image + filter.
-        // Merging views is complex/slow, so we will ship the base filtered image
-        // and acknowledge drawing is visual only for MVP unless we render it.
-        // Let's TRY to render the canvas if possible, but it implies Snapshotting.
-        // MVP: Upload filtered image.
-        
-        let filtered = applyFilter(to: base, filter: filters[currentFilterIndex])
-        
-        // TODO: Merge Drawing/Text. 
-        // We will assume "filtered" is the result for now.
-        
-        viewModel.storyUiImage = filtered
+        viewModel.storyUiImage = base
         
         Task {
             try await viewModel.uploadStory()
@@ -410,51 +393,17 @@ struct CreateStoryView: View {
     }
 }
 
-// Wrapper for SwiftyCamViewController defined in CameraService.swift
-struct StoryCameraWrapper: UIViewControllerRepresentable {
-    @ObservedObject var cameraService: CameraService
+struct StoryVideoPlayer: UIViewControllerRepresentable {
+    var url: URL
     
-    typealias UIViewControllerType = SwiftyCamViewController
-
-    func makeUIViewController(context: Context) -> SwiftyCamViewController {
-        let controller = SwiftyCamViewController()
-        controller.cameraDelegate = cameraService
-        controller.shouldPrompToAppSettings = true
-        controller.maximumVideoDuration = 60.0
-        controller.shouldUseDeviceOrientation = true
-        controller.allowAutoRotate = false
-        controller.audioEnabled = true
-        controller.videoGravity = .resizeAspectFill
-        controller.tapToFocus = true
-        controller.pinchToZoom = true
-        
-        cameraService.viewController = controller // Bind actions
-        
+    func makeUIViewController(context: Context) -> AVPlayerViewController {
+        let controller = AVPlayerViewController()
+        let player = AVPlayer(url: url)
+        controller.player = player
+        player.play()
         return controller
     }
     
-    func updateUIViewController(_ uiViewController: SwiftyCamViewController, context: Context) {}
+    func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {}
 }
 
-struct SwiftyRecordButtonWrapper: UIViewRepresentable {
-    @ObservedObject var cameraService: CameraService
-    typealias UIViewType = SwiftyRecordButton
-    
-    func makeUIView(context: Context) -> SwiftyRecordButton {
-        let button = SwiftyRecordButton(frame: CGRect(x: 0, y: 0, width: 75, height: 75))
-        button.delegate = cameraService
-        
-        // Make sure it looks enabled initially
-        button.buttonEnabled = true
-        
-        return button
-    }
-    
-    func updateUIView(_ uiView: SwiftyRecordButton, context: Context) {
-        if cameraService.isRecording {
-            uiView.growButton()
-        } else {
-            uiView.shrinkButton()
-        }
-    }
-}

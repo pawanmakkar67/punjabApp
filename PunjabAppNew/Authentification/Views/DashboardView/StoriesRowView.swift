@@ -14,7 +14,7 @@ struct StoriesRowView: View {
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 15) {
+            HStack(spacing: 10) {
 
                 ForEach(viewModel.storiesList) { story in
                     VStack(spacing: 8) {

@@ -6,14 +6,11 @@ struct StoryCard: View {
     @State private var startIndex: Int? = nil
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 0) {
+            HStack(spacing: 10) {
                 ForEach(Array(viewModel.storiesList.enumerated()), id: \.element.user_id) { idx, friend in
                     storyCardItem(for: friend, at: idx)
                 }
             }
-            .padding(.horizontal)
-        }
         .fullScreenCover(item: $startIndex, onDismiss: { startIndex = nil }) { idx in
             StoryViewer(stories: viewModel.storiesList, startIndex: idx) {
                 startIndex = nil
@@ -28,6 +25,8 @@ struct StoryCard: View {
             storyBackground(for: friend)
             storyUserInfo(for: friend)
         }
+        .frame(width: 120, height: 170)
+        .cornerRadius(15)
         .onTapGesture {
             startIndex = index
         }
@@ -45,7 +44,7 @@ struct StoryCard: View {
             }
             .resizable()
             .scaledToFill()
-            .frame(width: 100, height: 170)
+            .frame(width: 120, height: 170)
             .clipped()
             .cornerRadius(15)
     }

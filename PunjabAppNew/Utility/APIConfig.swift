@@ -13,8 +13,8 @@ enum APIConfig {
     static let serverKey = "3ae76dd05d8502d14bc94094a5eeea16"
 
     #if DEBUG
-    static let baseURL = "https://ludhianalive.com/"
-    static let baseAPI = "https://ludhianalive.com/api/"
+    static let baseURL = "https://stage.ludhianalive.com/"
+    static let baseAPI = "https://stage.ludhianalive.com/api/"
     #else
     static let baseURL = "https://ludhianalive.com/"
     static let baseAPI = "https://ludhianalive.com/api/"

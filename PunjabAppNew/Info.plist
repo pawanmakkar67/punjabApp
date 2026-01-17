@@ -10,6 +10,10 @@
 	<string>Testinng</string>
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>We need your location to add it to your post.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>We need access to your photos to let you select images for your story.</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>We need access to save your story to your photos.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 </dict>
