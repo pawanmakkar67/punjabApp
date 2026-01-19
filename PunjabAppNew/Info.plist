@@ -8,6 +8,8 @@
 	<string>Testinng</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Testinng</string>
+    <key>NSMotionUsageDescription</key>
+    <string>We use motion tracking to anchor AR objects in the world.</string>
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>We need your location to add it to your post.</string>
     <key>NSPhotoLibraryUsageDescription</key>

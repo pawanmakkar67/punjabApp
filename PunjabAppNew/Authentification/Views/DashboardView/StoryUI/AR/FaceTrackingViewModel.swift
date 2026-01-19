@@ -20,8 +20,11 @@ class FaceTrackingViewModel: ObservableObject {
     // Recording State
     @Published var isRecording = false
     @Published var isRecordingLocked = false
+    @Published var isFrontCamera = true
+    @Published var statusMessage: String?
     @Published var capturedImage: UIImage?
     @Published var capturedVideoURL: URL?
+    @Published var debugLog: String = "Debug Initialized" // Debug HUD
     
     // Actions
     var triggerCapture: (() -> Void)?
@@ -85,6 +88,10 @@ class FaceTrackingViewModel: ObservableObject {
     
     func unlockRecording() {
         isRecordingLocked = false
+    }
+    
+    func toggleCamera() {
+        isFrontCamera.toggle()
     }
     
     // MARK: - Frame Processing

@@ -50,6 +50,64 @@
             endingLineNumber = "154"
             landmarkName = "confirmOTP(completion:)"
             landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "02829C92-31EE-495C-9887-72BF6717B32E - 249da62d5083d42e"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(1) suspend resume partial function for PunjabAppNew.RegistrationViewModel.confirmOTP(completion: (Swift.Bool, Swift.Optional&lt;Swift.String&gt;) -&gt; ()) async -&gt; ()"
+                  moduleName = "PunjabAppNew.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/pc/Documents/PunjabAppNew/PunjabAppNew/Authentification/ViewModels/RegistrationViewModel.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "154"
+                  endingLineNumber = "154">
+               </Location>
+               <Location
+                  uuid = "02829C92-31EE-495C-9887-72BF6717B32E - 2dc376afd745c840"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(2) await resume partial function for PunjabAppNew.RegistrationViewModel.confirmOTP(completion: (Swift.Bool, Swift.Optional&lt;Swift.String&gt;) -&gt; ()) async -&gt; ()"
+                  moduleName = "PunjabAppNew.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/pc/Documents/PunjabAppNew/PunjabAppNew/Authentification/ViewModels/RegistrationViewModel.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "154"
+                  endingLineNumber = "154">
+               </Location>
+               <Location
+                  uuid = "02829C92-31EE-495C-9887-72BF6717B32E - 53f97c09b56d1028"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(3) suspend resume partial function for PunjabAppNew.RegistrationViewModel.confirmOTP(completion: (Swift.Bool, Swift.Optional&lt;Swift.String&gt;) -&gt; ()) async -&gt; ()"
+                  moduleName = "PunjabAppNew.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/pc/Documents/PunjabAppNew/PunjabAppNew/Authentification/ViewModels/RegistrationViewModel.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "154"
+                  endingLineNumber = "154">
+               </Location>
+               <Location
+                  uuid = "02829C92-31EE-495C-9887-72BF6717B32E - 648b2f7bd879b229"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(4) suspend resume partial function for PunjabAppNew.RegistrationViewModel.confirmOTP(completion: (Swift.Bool, Swift.Optional&lt;Swift.String&gt;) -&gt; ()) async -&gt; ()"
+                  moduleName = "PunjabAppNew.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/pc/Documents/PunjabAppNew/PunjabAppNew/Authentification/ViewModels/RegistrationViewModel.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "154"
+                  endingLineNumber = "154">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -174,10 +232,10 @@
             filePath = "PunjabAppNew/Authentification/ViewModels/FeedViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "429"
-            endingLineNumber = "429"
-            landmarkName = "fetchMe()"
-            landmarkType = "7">
+            startingLineNumber = "428"
+            endingLineNumber = "428"
+            landmarkName = "FeedViewModel"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -206,9 +264,9 @@
             filePath = "PunjabAppNew/Authentification/ViewModels/FeedViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "592"
-            endingLineNumber = "592"
-            landmarkName = "fetchMyPhotos()"
+            startingLineNumber = "591"
+            endingLineNumber = "591"
+            landmarkName = "fetchMyPosts()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -222,10 +280,10 @@
             filePath = "PunjabAppNew/Authentification/ViewModels/FeedViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "543"
-            endingLineNumber = "543"
-            landmarkName = "fetchMyPosts()"
-            landmarkType = "7">
+            startingLineNumber = "542"
+            endingLineNumber = "542"
+            landmarkName = "FeedViewModel"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -302,9 +360,9 @@
             filePath = "PunjabAppNew/Authentification/ViewModels/FeedViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "601"
-            endingLineNumber = "601"
-            landmarkName = "fetchMyPhotos()"
+            startingLineNumber = "600"
+            endingLineNumber = "600"
+            landmarkName = "fetchMyPosts()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -318,9 +376,9 @@
             filePath = "PunjabAppNew/Authentification/ViewModels/FeedViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "600"
-            endingLineNumber = "600"
-            landmarkName = "fetchMyPhotos()"
+            startingLineNumber = "599"
+            endingLineNumber = "599"
+            landmarkName = "fetchMyPosts()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -334,8 +392,8 @@
             filePath = "PunjabAppNew/Authentification/ViewModels/FeedViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "142"
-            endingLineNumber = "142"
+            startingLineNumber = "141"
+            endingLineNumber = "141"
             landmarkName = "createComment(postID:text:imageData:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -350,8 +408,8 @@
             filePath = "PunjabAppNew/Authentification/ViewModels/FeedViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "144"
-            endingLineNumber = "144"
+            startingLineNumber = "143"
+            endingLineNumber = "143"
             landmarkName = "createComment(postID:text:imageData:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -366,25 +424,9 @@
             filePath = "PunjabAppNew/Authentification/ViewModels/FeedViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "258"
-            endingLineNumber = "258"
+            startingLineNumber = "257"
+            endingLineNumber = "257"
             landmarkName = "uploadPost()"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "CBB833BD-183E-4B9A-BD81-C6035E3687EF"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "PunjabAppNew/Authentification/ViewModels/FeedViewModel.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "684"
-            endingLineNumber = "684"
-            landmarkName = "fetchMyReels()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -407,22 +449,6 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "25C6AFFC-CA45-4327-AFFA-505AF4C762D1"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "PunjabAppNew/Authentification/Views/DashboardView/StoryViewer.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "130"
-            endingLineNumber = "130"
-            landmarkName = "body"
-            landmarkType = "24">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
             uuid = "15F62F32-46B8-43D9-AD1D-4755F840108C"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
@@ -430,9 +456,9 @@
             filePath = "PunjabAppNew/Authentification/ViewModels/FeedViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "785"
-            endingLineNumber = "785"
-            landmarkName = "fetchFollowing()"
+            startingLineNumber = "784"
+            endingLineNumber = "784"
+            landmarkName = "fetchReels()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -446,9 +472,9 @@
             filePath = "PunjabAppNew/Authentification/ViewModels/FeedViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "788"
-            endingLineNumber = "788"
-            landmarkName = "fetchFollowing()"
+            startingLineNumber = "787"
+            endingLineNumber = "787"
+            landmarkName = "fetchReels()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

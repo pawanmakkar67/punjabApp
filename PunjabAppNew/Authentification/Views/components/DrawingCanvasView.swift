@@ -13,19 +13,28 @@ struct DrawingCanvasView: UIViewRepresentable {
     @Binding var isDrawing: Bool
     var toolType: PKInkingTool.InkType = .pen
     var color: Color = .red
+    var isEraser: Bool = false
     
     func makeUIView(context: Context) -> PKCanvasView {
         canvasView.drawingPolicy = .anyInput
         canvasView.backgroundColor = .clear
         canvasView.isOpaque = false
         // Initial Tool
-        canvasView.tool = PKInkingTool(toolType, color: UIColor(color), width: 5)
+        setTool(for: canvasView)
         return canvasView
     }
 
     func updateUIView(_ uiView: PKCanvasView, context: Context) {
         // Toggle interaction
         uiView.isUserInteractionEnabled = isDrawing
-        uiView.tool = PKInkingTool(toolType, color: UIColor(color), width: 5)
+        setTool(for: uiView)
+    }
+    
+    private func setTool(for canvas: PKCanvasView) {
+        if isEraser {
+            canvas.tool = PKEraserTool(.vector)
+        } else {
+            canvas.tool = PKInkingTool(toolType, color: UIColor(color), width: 5)
+        }
     }
 }

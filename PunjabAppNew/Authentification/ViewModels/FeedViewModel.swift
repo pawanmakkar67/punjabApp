@@ -42,7 +42,8 @@ class FeedViewModel: ObservableObject {
     @Published var postMusic: String = ""
     @Published var postFeeling: String = ""
     var uiImage: UIImage?
-    var storyUiImage: UIImage?
+    @Published var storyUiImage: UIImage?
+    @Published var storyVideoURL: URL?
     @Published var friends: [User]?
     @Published var currentUser: User_data?
     @Published var mindText: String = ""
@@ -343,10 +344,63 @@ class FeedViewModel: ObservableObject {
     
     func loadCreateStoryImage(fromItem item: PhotosPickerItem?) async throws {
         guard let item = item else { return }
-        guard let data = try? await item.loadTransferable(type: Data.self) else { return }
-        guard let uiImage = UIImage(data: data) else { return }
-        self.storyUiImage = uiImage
-        self.createStoryImage = Image(uiImage: uiImage)
+        
+        // Check for Video
+        if let movie = try? await item.loadTransferable(type: Data.self) {
+             // Basic naive check or rely on UTType if available
+             // PhotosPickerItem doesn't easily expose type without loadTransferable of specific types
+        }
+        
+        // Try Image
+        if let data = try? await item.loadTransferable(type: Data.self), let uiImage = UIImage(data: data) {
+            await MainActor.run {
+                self.storyUiImage = uiImage
+                self.createStoryImage = Image(uiImage: uiImage)
+                self.storyVideoURL = nil // Clear video if image selected
+            }
+            return
+        }
+        
+        // Try Video
+        // To play video we need a URL. PhotosPicker returns Data for video often, causing memory issues implies huge files.
+        // Better to load as File (URL).
+        
+        // For simplicity in this codebase context:
+        if let movieData = try? await item.loadTransferable(type: Data.self) {
+             // We can't easily distinguish data without type checking, but if UIImage failed...
+             // Let's try to see if it behaves like a video or use loadFileRepresentation if possible
+        }
+        
+        // Correct approach for mixed media: Use loadTransferable with FileRepresentation or check types
+        // Since we lack simple type checks in this snippet, let's try standard video loading
+        
+        // TEMPORARY FIX: Just Image first as requested "image or video", let's fix Image first securely
+        // But user asked for video too.
+        
+        // Attempting to load as movie file
+        if let movie = try? await item.loadTransferable(type: VideoPickerTransferable.self) {
+            await MainActor.run {
+                self.storyVideoURL = movie.url
+                self.storyUiImage = nil
+                self.createStoryImage = Image("")
+            }
+        }
+    }
+    
+    struct VideoPickerTransferable: Transferable {
+        let url: URL
+        static var transferRepresentation: some TransferRepresentation {
+            FileRepresentation(contentType: .movie) { movie in
+                SentTransferredFile(movie.url)
+            } importing: { received in
+                let copy = URL.documentsDirectory.appending(path: "story_video.mp4")
+                if FileManager.default.fileExists(atPath: copy.path()) {
+                    try? FileManager.default.removeItem(at: copy)
+                }
+                try FileManager.default.copyItem(at: received.file, to: copy)
+                return Self(url: copy)
+            }
+        }
     }
     
     func loadVideo(fromItem item: PhotosPickerItem?) async {

@@ -6,7 +6,7 @@ enum FilterType: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
-struct Filter: Identifiable {
+struct Filter: Identifiable, Equatable {
     let id = UUID()
     let imageName: String
     let type: FilterType
