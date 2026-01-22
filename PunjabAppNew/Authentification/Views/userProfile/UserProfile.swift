@@ -1,4 +1,12 @@
 //
+//  MenuView.swift
+//  PunjabAppNew
+//
+//  Created by pc on 22/01/26.
+//
+
+
+//
 //  ContentView.swift
 //  FacebookClone
 //
@@ -7,7 +15,7 @@
 
 import SwiftUI
 
-struct MenuView: View {
+struct UserProfile: View {
     @StateObject private var viewModel = FeedViewModel()
 //    private let user: User = User(userName: "pankajgaikar", userImage: "user_16")
     @State private var showCreatePostView: Bool = false
@@ -63,6 +71,6 @@ struct MenuView: View {
 }
 
 #Preview {
-    MenuView()
+    UserProfile()
 }
 

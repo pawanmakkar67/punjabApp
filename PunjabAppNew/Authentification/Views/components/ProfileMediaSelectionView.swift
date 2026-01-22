@@ -12,6 +12,7 @@ import AVKit
 struct ProfileMediaSelectionView: View {
     @State private var selectedView = 0
     @ObservedObject var viewModel: FeedViewModel
+    var userID: String? = nil
 
     var body: some View {
         VStack(spacing: 0) {
@@ -73,20 +74,20 @@ struct ProfileMediaSelectionView: View {
             // Tab Content
             ZStack {
                 if selectedView == 0 {
-                    PostsListView(viewModel: viewModel)
+                    PostsListView(viewModel: viewModel, userID: userID)
                         .onAppear {
                             print("📱 Posts tab appeared")
                         }
                 } else if selectedView == 1 {
                     MediaGridView(viewModel: viewModel, posts: viewModel.myphotos, showPlayIcon: false, onLoadMore: {
-                        Task { await viewModel.fetchMyPhotos() }
+                        Task { await viewModel.fetchMyPhotos(userID: userID) }
                     })
                         .onAppear {
                             print("📱 Grid tab appeared - myphotos: \(viewModel.myphotos.count)")
                         }
                 } else if selectedView == 2 {
                     MediaGridView(viewModel: viewModel, posts: viewModel.myvideos, showPlayIcon: true, onLoadMore: {
-                        Task { await viewModel.fetchMyVideos() }
+                        Task { await viewModel.fetchMyVideos(userID: userID) }
                     })
                         .onAppear {
                             print("📱 Videos tab appeared - myvideos: \(viewModel.myvideos.count)")
@@ -97,7 +98,7 @@ struct ProfileMediaSelectionView: View {
 //                            print("📱 Tagged tab appeared")
 //                        }
                     MediaGridView(viewModel: viewModel, posts: viewModel.myreels, showPlayIcon: true, onLoadMore: {
-                        Task { await viewModel.fetchMyReels() }
+                        Task { await viewModel.fetchMyReels(userID: userID) }
                     })
                         .onAppear {
                             print("📱 Videos tab appeared - myvideos: \(viewModel.myvideos.count)")
@@ -113,10 +114,10 @@ struct ProfileMediaSelectionView: View {
             print("📱 myposts count: \(viewModel.myposts.count)")
             
             Task {
-                await viewModel.fetchMyPosts()
-               await viewModel.fetchMyVideos()
-               await viewModel.fetchMyPhotos()
-               await viewModel.fetchMyReels()
+                await viewModel.fetchMyPosts(userID: userID)
+               await viewModel.fetchMyVideos(userID: userID)
+               await viewModel.fetchMyPhotos(userID: userID)
+               await viewModel.fetchMyReels(userID: userID)
 
             }
         }
@@ -126,6 +127,7 @@ struct ProfileMediaSelectionView: View {
 // MARK: - Posts List View
 struct PostsListView: View {
     @ObservedObject var viewModel: FeedViewModel
+    var userID: String? = nil
     
     var body: some View {
         VStack(spacing: 0) {
@@ -147,7 +149,7 @@ struct PostsListView: View {
                         .foregroundColor(.gray)
                     
                     Button(action: {
-                        Task { try await viewModel.fetchMyPosts() }
+                        Task { try await viewModel.fetchMyPosts(userID: userID) }
                     }) {
                         Text("Retry Fetch")
                             .font(.caption)
@@ -165,7 +167,7 @@ struct PostsListView: View {
                         MyPostView(viewModel: viewModel, index: index, width: UIScreen.main.bounds.width)
                             .onAppear {
                                 if index == viewModel.myposts.count - 1 {
-                                    Task { await viewModel.fetchMyPosts() }
+                                    Task { await viewModel.fetchMyPosts(userID: userID) }
                                 }
                             }
                         DividerView(widthRectangle: UIScreen.main.bounds.width - 15)

@@ -68,7 +68,7 @@ struct StoryCard: View {
             .clipShape(Circle())
             .overlay(
                 Circle()
-                    .stroke(Color.blue, lineWidth: 3)
+                    .stroke(AppColors.themeColor, lineWidth: 3)
             )
     }
     

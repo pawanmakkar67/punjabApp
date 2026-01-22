@@ -21,13 +21,13 @@ struct VideosView: View {
                     Text("No reels available")
                         .foregroundColor(.gray)
                 } else {
-                    MediaGridVideoView(viewModel: viewModel, posts: viewModel.reels, showPlayIcon: true, onLoadMore: {
+                    MediaGridVideoView(viewModel: viewModel, posts: viewModel.reels, showPlayIcon: false, onLoadMore: {
                         Task { await viewModel.fetchReels() }
                     })
                 }
             }
-            .navigationTitle("Videos")
-            .navigationBarTitleDisplayMode(.inline)
+//            .navigationTitle("Videos")
+//            .navigationBarTitleDisplayMode(.inline)
             .onAppear {
                 if viewModel.reels.isEmpty {
                     Task { await viewModel.fetchReels() }

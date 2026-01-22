@@ -13,6 +13,7 @@ import SwiftUI
 import CoreMotion
 
 // MARK: - Camera Service Adapter
+@MainActor
 class CameraService: NSObject, ObservableObject, SwiftyCamViewControllerDelegate, SwiftyCamButtonDelegate {
     @Published var capturedImage: UIImage?
     @Published var isPermissionGranted = false
@@ -875,12 +876,19 @@ class SwiftyRecordButton: SwiftyCamButton {
 // MARK: - Helper Classes (Repeated for context if needed, but assuming one definition)
 // (Orientation, PreviewView are above)
 
+@MainActor
 class Orientation  {
     var shouldUseDeviceOrientation: Bool  = false
     fileprivate var deviceOrientation : UIDeviceOrientation?
     fileprivate let coreMotionManager = CMMotionManager()
     
-    init() { coreMotionManager.accelerometerUpdateInterval = 0.1 }
+    init() { 
+        coreMotionManager.accelerometerUpdateInterval = 0.2 // Less frequent updates
+    }
+    
+    deinit {
+        coreMotionManager.stopAccelerometerUpdates()
+    }
     
     func start() {
         self.deviceOrientation = UIDevice.current.orientation

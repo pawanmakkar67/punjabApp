@@ -191,7 +191,7 @@ struct Post : Mappable {
     var videoTitle : String?
     var is_reel : String?
     var blur_url : String?
-    var publisher : Publisher?
+    var publisher : User_data?
     var limit_comments : Int?
     var limited_comments : Bool?
     var is_group_post : Bool?

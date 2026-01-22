@@ -28,6 +28,7 @@ class FeedViewModel: ObservableObject {
     @Published var coverImage: Image = Image("no_profile")
     @Published var createPostImage: Image = Image("")
     @Published var createStoryImage: Image = Image("")
+    
     @Published var createStorySelectedImage: PhotosPickerItem? {
         didSet { Task { try await loadCreateStoryImage(fromItem: createStorySelectedImage) } }
     }
@@ -41,12 +42,14 @@ class FeedViewModel: ObservableObject {
     @Published var postPrivacy: String = "Everyone"
     @Published var postMusic: String = ""
     @Published var postFeeling: String = ""
+    @Published var mindText: String = ""
+    
     var uiImage: UIImage?
     @Published var storyUiImage: UIImage?
     @Published var storyVideoURL: URL?
+    
     @Published var friends: [User]?
     @Published var currentUser: User_data?
-    @Published var mindText: String = ""
     
     @Published var posts = [Post]()
     @Published var myposts = [Post]()
@@ -55,9 +58,10 @@ class FeedViewModel: ObservableObject {
     @Published var myreels = [Post]()
 
     @Published var storiesList = [Stories]()
+    @Published var isLoadingStories = false
+
     private var cancellables = Set<AnyCancellable>()
     @Published var isLoading = false
-    @Published var isLoadingStories = false
     @Published var hasMorePosts = true
     @Published var hasMorePhotos = true
     @Published var hasMoreVideos = true
@@ -114,7 +118,13 @@ class FeedViewModel: ObservableObject {
         if UserDefaults.standard.isUserCacheExpired() {
             Task { await fetchMe() }
         }
-
+        
+        NotificationCenter.default.addObserver(forName: NSNotification.Name("RefreshFeed"), object: nil, queue: .main) { [weak self] _ in
+            Task {
+                await self?.fetchMe()
+                await self?.fetchPosts()
+            }
+        }
     }
 
     @MainActor
@@ -188,7 +198,6 @@ class FeedViewModel: ObservableObject {
         }
     }
 
-    @MainActor
     func createReply(commentID: String, text: String, imageData: Data? = nil) async {
         var params: [String: Any] = [
             "comment_id": commentID,
@@ -278,7 +287,6 @@ class FeedViewModel: ObservableObject {
             self.createPostImage = Image("")
             self.selectedVideo = nil
             self.videoData = nil
-            self.videoData = nil
             self.postLocation = ""
             self.postPrivacy = "Everyone"
             self.postMusic = ""
@@ -290,28 +298,25 @@ class FeedViewModel: ObservableObject {
         await fetchMe()
     }
 
-    func uploadStory() async throws {
-        guard let uiImage = storyUiImage else { return }
-        guard let imageData = uiImage.jpegData(compressionQuality: 0.5) else { return }
-        
+    func uploadStory(fileType: String, fileData: Data) async throws {
         // Construct parameters
-        // Assuming server accepts 'file' or 'image' and 'story_title' etc.
-        // Adjust parameters based on actual API requirements.
         let params: [String: Any] = [
-            "type": "image", // Example type
-            "story_title": "New Story"
-            // Add other needed params
+            "file_type": fileType
         ]
         
-        let _: storyModel = try await APIManager.shared.uploadRequest(
+        let fileName = fileType == "video" ? "story_video.mp4" : "story_image.jpg"
+        let mimeType = fileType == "video" ? "video/mp4" : "image/jpeg"
+        
+        let response: storyModel = try await APIManager.shared.uploadRequest(
             url: APIList.createStory,
             parameters: params,
-            data: imageData,
-            name: "file", // Field name for file
-            fileName: "story_image.jpg",
-            mimeType: "image/jpeg",
+            data: fileData,
+            name: "file",
+            fileName: fileName,
+            mimeType: mimeType,
             model: storyModel.self
         )
+        print("📸 Upload Story Response: \(response.toJSON())")
         
         // Refresh stories
         await fetchStories()
@@ -333,6 +338,7 @@ class FeedViewModel: ObservableObject {
         self.coverImage = Image(uiImage: uiImage)
         try await updateCoverImage()
     }
+    
     func loadCreatePostImage(fromItem item: PhotosPickerItem?) async throws{
             guard let item = item else { return }
             guard let data = try? await item.loadTransferable(type: Data.self) else { return }
@@ -346,9 +352,14 @@ class FeedViewModel: ObservableObject {
         guard let item = item else { return }
         
         // Check for Video
-        if let movie = try? await item.loadTransferable(type: Data.self) {
-             // Basic naive check or rely on UTType if available
-             // PhotosPickerItem doesn't easily expose type without loadTransferable of specific types
+        // Attempting to load as movie file
+        if let movie = try? await item.loadTransferable(type: VideoPickerTransferable.self) {
+            await MainActor.run {
+                self.storyVideoURL = movie.url
+                self.storyUiImage = nil
+                self.createStoryImage = Image("")
+            }
+            return
         }
         
         // Try Image
@@ -359,31 +370,6 @@ class FeedViewModel: ObservableObject {
                 self.storyVideoURL = nil // Clear video if image selected
             }
             return
-        }
-        
-        // Try Video
-        // To play video we need a URL. PhotosPicker returns Data for video often, causing memory issues implies huge files.
-        // Better to load as File (URL).
-        
-        // For simplicity in this codebase context:
-        if let movieData = try? await item.loadTransferable(type: Data.self) {
-             // We can't easily distinguish data without type checking, but if UIImage failed...
-             // Let's try to see if it behaves like a video or use loadFileRepresentation if possible
-        }
-        
-        // Correct approach for mixed media: Use loadTransferable with FileRepresentation or check types
-        // Since we lack simple type checks in this snippet, let's try standard video loading
-        
-        // TEMPORARY FIX: Just Image first as requested "image or video", let's fix Image first securely
-        // But user asked for video too.
-        
-        // Attempting to load as movie file
-        if let movie = try? await item.loadTransferable(type: VideoPickerTransferable.self) {
-            await MainActor.run {
-                self.storyVideoURL = movie.url
-                self.storyUiImage = nil
-                self.createStoryImage = Image("")
-            }
         }
     }
     
@@ -541,18 +527,18 @@ class FeedViewModel: ObservableObject {
     }
     
     @MainActor
-    func fetchMyPosts() async {
+    func fetchMyPosts(userID: String? = nil) async {
         guard !isFetching && hasMorePosts else { return }
         isFetching = true
         
         isLoading = true
-        let userID = UserDefaults.getUserID() ?? ""
+        let targetID = userID ?? UserDefaults.getUserID() ?? ""
         
         print("📱 Fetching my posts for user: \(userID)")
         
         var params: [String: Any] = [
             "type": "get_user_posts",  // or get_user_posts
-            "id": userID,
+            "id": targetID,
             "limit": "20"
         ]
 
@@ -604,15 +590,15 @@ class FeedViewModel: ObservableObject {
     }
     
     @MainActor
-    func fetchMyPhotos() async {
+    func fetchMyPhotos(userID: String? = nil) async {
         guard !isFetching && hasMorePhotos else { return }
         isFetching = true
         
-        let userID = UserDefaults.getUserID() ?? ""
+        let targetID = userID ?? UserDefaults.getUserID() ?? ""
         
         var params: [String: Any] = [
             "postType": "photos",
-            "publisher_id": userID,
+            "publisher_id": targetID,
             "publisher_type": "user",
             "limit": "20"
         ]
@@ -657,15 +643,15 @@ class FeedViewModel: ObservableObject {
     }
 
     @MainActor
-    func fetchMyVideos() async {
+    func fetchMyVideos(userID: String? = nil) async {
         guard !isFetching && hasMoreVideos else { return }
         isFetching = true
         
-        let userID = UserDefaults.getUserID() ?? ""
+        let targetID = userID ?? UserDefaults.getUserID() ?? ""
         
         var params: [String: Any] = [
             "postType": "video",
-            "publisher_id": userID,
+            "publisher_id": targetID,
             "publisher_type": "user",
             "limit": "20"
         ]
@@ -710,15 +696,15 @@ class FeedViewModel: ObservableObject {
     }
     
     @MainActor
-    func fetchMyReels() async {
+    func fetchMyReels(userID: String? = nil) async {
         guard !isFetching && hasMoreReels else { return }
         isFetching = true
         
-        let userID = UserDefaults.getUserID() ?? ""
+        let targetID = userID ?? UserDefaults.getUserID() ?? ""
         
         var params: [String: Any] = [
             "postType": "reels",
-            "publisher_id": userID,
+            "publisher_id": targetID,
             "publisher_type": "user",
             "limit": "20"
         ]
@@ -886,7 +872,6 @@ class FeedViewModel: ObservableObject {
         }
     }
     
-    
     @MainActor
     func fetchStories() async {
 //        guard !isFetching && hasMorePosts else { return }
@@ -934,9 +919,11 @@ class FeedViewModel: ObservableObject {
             print("❌ Error fetching posts:", error.localizedDescription)
         }
 
-        isFetching = false
+        isLoadingStories = false
     }
     
+    
+
     func triggerLoadMoreIfNeeded(_ index: Int) {
         print("index ==>",index)
         guard hasMorePosts, !isFetching, index == posts.count - 4 else { return }
@@ -979,6 +966,8 @@ class FeedViewModel: ObservableObject {
             print("❌ Error following user:", error.localizedDescription)
         }
     }
+
+
 }
 
 struct BaseActionResponse: Mappable {

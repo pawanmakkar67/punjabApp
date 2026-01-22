@@ -64,7 +64,7 @@ struct FeedView: View {
                             }
                         }
                     }.fullScreenCover(isPresented: $showCreatePostView) {
-                        CreatePostView(viewModel: viewModel, width: proxy.size.width)
+                        CreatePostView(viewModel: viewModel, currentUser: viewModel.currentUser, width: proxy.size.width)
                     }
                 }
             }

@@ -42,7 +42,7 @@ struct MainTabbarView: View {
                                 .onAppear{
                                     selectedTab = 2
                                 }
-            MarketplaceView()
+            PagesView()
                 .tabItem {
                                     VStack {
                                         Image(systemName: "wind.snow")

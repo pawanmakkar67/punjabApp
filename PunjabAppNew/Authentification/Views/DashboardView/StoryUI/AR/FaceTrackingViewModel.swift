@@ -1,6 +1,7 @@
 import UIKit
 import SceneKit
 import ARKit
+import Vision
 
 class FaceTrackingViewModel: ObservableObject {
     
@@ -25,11 +26,14 @@ class FaceTrackingViewModel: ObservableObject {
     @Published var capturedImage: UIImage?
     @Published var capturedVideoURL: URL?
     @Published var debugLog: String = "Debug Initialized" // Debug HUD
+    @Published var detectedFaceRect: CGRect? // For Back Camera Vision Tracking
+    
+    // Actions
     
     // Actions
     var triggerCapture: (() -> Void)?
     
-    let videoRecorder = VideoRecorder()
+    lazy var videoRecorder = VideoRecorder()
     
     // Zoom State
     var currentZoomFactor: CGFloat = 1.0
@@ -106,5 +110,28 @@ class FaceTrackingViewModel: ObservableObject {
         if isRecording {
             videoRecorder.writeAudio(sampleBuffer: buffer)
         }
+    }
+    
+    // MARK: - Vision (Back Camera Tracking)
+    
+    private lazy var faceDetectionRequest: VNDetectFaceRectanglesRequest = {
+        let req = VNDetectFaceRectanglesRequest { [weak self] request, error in
+            guard let self = self else { return }
+            if let results = request.results as? [VNFaceObservation], let face = results.first {
+                DispatchQueue.main.async {
+                    self.detectedFaceRect = face.boundingBox
+                }
+            } else {
+                DispatchQueue.main.async {
+                    self.detectedFaceRect = nil
+                }
+            }
+        }
+        return req
+    }()
+    
+    func detectFace(in buffer: CVPixelBuffer) {
+        let handler = VNImageRequestHandler(cvPixelBuffer: buffer, orientation: .right, options: [:])
+        try? handler.perform([faceDetectionRequest])
     }
 }

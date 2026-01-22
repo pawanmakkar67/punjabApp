@@ -22,7 +22,7 @@ struct ARStoryCameraView: UIViewRepresentable {
             config.worldAlignment = .gravity
             config.providesAudioData = true // Enabled
             if ARWorldTrackingConfiguration.supportsUserFaceTracking {
-                config.userFaceTrackingEnabled = true
+                // config.userFaceTrackingEnabled = true // DISABLED: To ensure no conflict with Vision
             }
             configuration = config
         }
@@ -75,6 +75,7 @@ struct ARStoryCameraView: UIViewRepresentable {
         var frameCounter: Int = 0
         var isSwitching: Bool = false
         var isProcessingFrame: Bool = false
+        var visionNode: SCNNode? // Node for Back Camera (Vision Tracking)
         
         init(viewModel: FaceTrackingViewModel) {
             self.viewModel = viewModel
@@ -88,6 +89,11 @@ struct ARStoryCameraView: UIViewRepresentable {
         
         func setFrontCamera(in view: ARSCNView) {
             isSwitching = true
+            
+            // CLEANUP: Remove back camera vision node
+            visionNode?.removeFromParentNode()
+            visionNode = nil
+            
             view.session.pause() // Stop previous session first
             let config = ARFaceTrackingConfiguration()
             config.isLightEstimationEnabled = true
@@ -101,6 +107,11 @@ struct ARStoryCameraView: UIViewRepresentable {
         
         func setBackCamera(in view: ARSCNView) {
             isSwitching = true
+            
+            // CLEANUP: Remove previous vision node to force fresh recreation
+            visionNode?.removeFromParentNode()
+            visionNode = nil
+            
             view.session.pause() // Stop previous session first
             let config = ARWorldTrackingConfiguration()
             config.providesAudioData = true // Enabled
@@ -108,8 +119,8 @@ struct ARStoryCameraView: UIViewRepresentable {
             config.worldAlignment = .gravity
             
             if ARWorldTrackingConfiguration.supportsUserFaceTracking {
-                print("✅ Back Camera: User Face Tracking Supported")
-                config.userFaceTrackingEnabled = true
+                // print("✅ Back Camera: User Face Tracking Supported")
+                // config.userFaceTrackingEnabled = true // DISABLED: Tracks user, not subject
                 DispatchQueue.main.async { self.viewModel.statusMessage = nil }
             } else {
                 print("⚠️ Back Camera: Face Tracking NOT Supported")
@@ -128,6 +139,115 @@ struct ARStoryCameraView: UIViewRepresentable {
             guard let image = sceneView?.snapshot() else { return }
             DispatchQueue.main.async {
                 self.viewModel.capturedImage = image
+            }
+        }
+        
+        // MARK: - Logic (Moved)
+        
+        func updateFeatures(for node: SCNNode, using anchor: ARFaceAnchor) {
+             let isFront = viewModel.isFrontCamera
+             
+             for (feature, indices) in zip(viewModel.features, viewModel.featureIndices) {
+                 guard let child = node.childNode(withName: feature, recursively: false) as? FaceNode else { continue }
+                 
+                 if isFront {
+                     // Front Camera (High Accuracy Mesh-Based)
+                     let vertices = indices.map { anchor.geometry.vertices[$0] }
+                     child.updatePosition(for: vertices)
+                 } else {
+                     // Back Camera (Fallback Manual Positioning - Manual Mode)
+                     // Approximate static offsets relative to face center
+                     var offset = SCNVector3Zero
+                     
+                     switch feature {
+                     case "nose":
+                         offset = SCNVector3(0, 0, 0.1)
+                     case "glasses":
+                         offset = SCNVector3(0, 0.05, 0.1)
+                     case "beard":
+                         offset = SCNVector3(0, -0.1, 0.1)
+                     default:
+                         break
+                     }
+                     child.position = offset
+                     child.scale = SCNVector3(5.0, 5.0, 5.0) // SUPER SCALE for visibility
+                     
+                     // DEBUG: Add Red Sphere to Nose if missing
+                     if feature == "nose" && child.childNode(withName: "debugSphere", recursively: false) == nil {
+                         let sphere = SCNSphere(radius: 0.02) // 2cm radius * 5 scale = 10cm visual
+                         sphere.firstMaterial?.diffuse.contents = UIColor.red
+                         sphere.firstMaterial?.lightingModel = .constant
+                         let sNode = SCNNode(geometry: sphere)
+                         sNode.name = "debugSphere"
+                         child.addChildNode(sNode)
+                     }
+                 }
+             }
+         }
+        
+        func hideAllFilters(in sceneView: ARSCNView) {
+             sceneView.scene.rootNode.enumerateChildNodes { (node, _) in
+                 for feature in viewModel.features {
+                     if let featureNode = node.childNode(withName: feature, recursively: true) {
+                         featureNode.isHidden = true
+                     }
+                 }
+             }
+         }
+        
+        func applyFilter(_ filter: Filter, in sceneView: ARSCNView) {
+            // First hide all
+            hideAllFilters(in: sceneView)
+            
+            let featureName: String
+            switch filter.type {
+            case .nose: featureName = "nose"
+            case .glasses: featureName = "glasses"
+            case .beard: featureName = "beard"
+            }
+            
+            sceneView.scene.rootNode.enumerateChildNodes { (node, _) in
+                 applyFilterToNode(filter, node: node)
+             }
+             
+             // Also apply to Vision Node
+             if let vNode = visionNode {
+                 applyFilterToNode(filter, node: vNode)
+             }
+         }
+        
+        func applyFilterToNode(_ filter: Filter, node: SCNNode) {
+            let featureName: String
+            switch filter.type {
+            case .nose: featureName = "nose"
+            case .glasses: featureName = "glasses"
+            case .beard: featureName = "beard"
+            }
+            
+            if let featureNode = node.childNode(withName: featureName, recursively: true) as? FaceNode {
+                print("🎨 Applying Filter: \(featureName). Unhiding node.")
+                featureNode.isHidden = false
+                featureNode.index = 0
+                
+                if let plane = featureNode.geometry as? SCNPlane {
+                    // RENDERING FIX: Revert to default lighting to check if .constant is the cause
+                    // plane.firstMaterial?.lightingModel = .constant 
+                    // plane.firstMaterial?.writesToDepthBuffer = false
+                    // plane.firstMaterial?.readsFromDepthBuffer = false
+                    
+                    if let image = UIImage(named: filter.imageName) {
+                        print("✅ Image Loaded: \(filter.imageName)")
+                        plane.firstMaterial?.diffuse.contents = image
+                        // plane.firstMaterial?.emission.contents = image 
+                        // plane.firstMaterial?.transparencyMode = .aOne 
+                    } else {
+                        print("❌ Image FAILED to load: \(filter.imageName). Using fallback.")
+                        plane.firstMaterial?.diffuse.contents = UIColor.clear
+                    }
+                    
+                    plane.firstMaterial?.isDoubleSided = true
+                    // plane.firstMaterial?.transparency = 1.0
+                }
             }
         }
         
@@ -151,21 +271,15 @@ struct ARStoryCameraView: UIViewRepresentable {
              
              // --- BACK CAMERA DEBUG ---
              // If Back Camera (No Mesh Vertices), show a Red Sphere to prove position
-             if faceAnchor.geometry.vertices.count == 0 {
-                 let sphere = SCNSphere(radius: 0.05) // 5cm sphere
-                 sphere.firstMaterial?.diffuse.contents = UIColor.red
-                 let sphereNode = SCNNode(geometry: sphere)
-                 // sphereNode.position = SCNVector3(0, 0, 0) // Center of face anchor
-                 node.addChildNode(sphereNode)
-                 print("📍 Back Camera: Added Red Debug Sphere")
-                 
-                 let zDist = anchor.transform.columns.3.z
-                 print("📍 Anchor World Z: \(zDist)")
-                 
-                 DispatchQueue.main.async {
-                     self.viewModel.debugLog = "ANCHOR FOUND! Z: \(String(format: "%.2f", zDist))"
-                 }
+             // --- BACK CAMERA DEBUG ---
+             // Force Manual Mode if Back Camera
+             if !viewModel.isFrontCamera {
+                  let zDist = anchor.transform.columns.3.z
+                  DispatchQueue.main.async {
+                      // self.viewModel.debugLog = "BACK CAM (MANUAL): Z: \(String(format: "%.2f", zDist))"
+                  }
              }
+             // -------------------------
              // -------------------------
              
              // Use ViewModel options to create nodes
@@ -184,15 +298,6 @@ struct ARStoryCameraView: UIViewRepresentable {
              let beardNode = FaceNode(with: viewModel.beardOptions, width: 0.22, height: 0.26)
              beardNode.name = "beard"
              node.addChildNode(beardNode)
-             
-             // VISIBILITY FIX: Force nodes to look at camera (Billboard) -> ONLY FOR BACK CAMERA
-             if faceAnchor.geometry.vertices.count == 0 {
-                 let billboard = SCNBillboardConstraint()
-                 billboard.freeAxes = .all
-                 noseNode.constraints = [billboard]
-                 glassesNode.constraints = [billboard]
-                 beardNode.constraints = [billboard]
-             }
              
              // Hide all nodes initially (no filter selected by default)
              noseNode.isHidden = true
@@ -218,9 +323,9 @@ struct ARStoryCameraView: UIViewRepresentable {
              updateFeatures(for: node, using: faceAnchor)
              
              if frameCounter % 60 == 0 {
+                  // Re-enable HUD for loop verification
                   let z = faceAnchor.transform.columns.3.z
-                  // Reduced logging frequency
-                  // DispatchQueue.main.async { self.viewModel.debugLog = "Track Z: \(String(format: "%.2f", z))" }
+                  DispatchQueue.main.async { self.viewModel.debugLog = "Track Z: \(String(format: "%.2f", z))" }
              }
              
 
@@ -231,7 +336,7 @@ struct ARStoryCameraView: UIViewRepresentable {
              
              // Video Recording Logic
              if viewModel.isRecording {
-                 // THROTTLE: Capture only every 4th frame (~15 FPS) to save memory
+                 // THROTTLE: Capture every 4th frame (~15 FPS) - 720p is lighter so we can do 15fps
                  // FLOW CONTROL: Drop frame if previous is still processing
                  if frameCounter % 4 == 0 && !isProcessingFrame {
                      isProcessingFrame = true
@@ -245,8 +350,15 @@ struct ARStoryCameraView: UIViewRepresentable {
                          
                          DispatchQueue.global(qos: .userInitiated).async {
                              let size = image.size
-                             let videoWidth = Int(size.width * image.scale) / 2 * 2
-                             let videoHeight = Int(size.height * image.scale) / 2 * 2
+                             let scale = image.scale
+                             
+                             // OPTIMIZATION: Downscale to max 720p width for performance
+                             // Native scale is often 3x (~1170p), which is too heavy for CPU processing
+                             let targetWidth: CGFloat = 720.0
+                             let resizeFactor = min(1.0, targetWidth / (size.width * scale))
+                             
+                             let videoWidth = Int(size.width * scale * resizeFactor) / 2 * 2
+                             let videoHeight = Int(size.height * scale * resizeFactor) / 2 * 2
                              
                              if let buffer = image.pixelBuffer(width: videoWidth, height: videoHeight) {
                                  self.viewModel.processFrame(buffer: buffer, time: CACurrentMediaTime())
@@ -255,6 +367,72 @@ struct ARStoryCameraView: UIViewRepresentable {
                          }
                      }
                  }
+             }
+
+             
+             // VISION LOGIC (Back Camera Only)
+             if !viewModel.isFrontCamera, let currentFrame = sceneView?.session.currentFrame {
+                 // 1. Run Detection (Throttle to every 10th frame to reduce CPU load)
+                 if frameCounter % 10 == 0 {
+                     let capturedImage = currentFrame.capturedImage // retain buffer
+                     DispatchQueue.global(qos: .userInitiated).async {
+                         self.viewModel.detectFace(in: capturedImage)
+                     }
+                 }
+                 
+                 // 2. Update Position
+                 if let faceRect = viewModel.detectedFaceRect {
+                     // Lazy Init Node
+                     if visionNode == nil {
+                         visionNode = SCNNode()
+                         visionNode?.name = "visionRoot"
+                         sceneView?.scene.rootNode.addChildNode(visionNode!)
+                         
+                         // Create subs
+                        let nose = FaceNode(with: viewModel.noseOptions, width: 0.06, height: 0.06)
+                        nose.name = "nose"
+                        nose.isHidden = true // Default Hidden
+                        visionNode?.addChildNode(nose)
+                        let glasses = FaceNode(with: viewModel.glassesOptions, width: 0.15, height: 0.06)
+                        glasses.name = "glasses"
+                        glasses.isHidden = true // Default Hidden
+                        visionNode?.addChildNode(glasses)
+                        let beard = FaceNode(with: viewModel.beardOptions, width: 0.22, height: 0.26)
+                        beard.name = "beard"
+                        beard.isHidden = true // Default Hidden
+                        visionNode?.addChildNode(beard)
+                    }
+                    
+                    visionNode?.isHidden = false
+                    
+                    // STATE FIX: Reset visibility and re-apply selection every frame
+                    // 1. Hide all feature nodes first to prevent ghosts/stuck filters
+                    visionNode?.childNodes.forEach { $0.isHidden = true }
+                    
+                    // 2. Apply current filter if exists
+                    if let filter = viewModel.getSelectedFilter() {
+                        applyFilterToNode(filter, node: visionNode!)
+                    }
+                    
+                    // Convert Rect (Normalized Bottom-Left) to Screen Point
+                    let bounds = sceneView!.bounds
+                    let screenX = faceRect.midX * bounds.width
+                    let screenY = (1.0 - faceRect.midY) * bounds.height
+                    
+                    // Unproject to World (Z = 0.5m in front of camera)
+                    let projected = sceneView!.unprojectPoint(SCNVector3(screenX, screenY, 0.5)) // 0.5 is depth (0 near, 1 far)
+                    visionNode?.position = projected
+                    
+                    // Make it look at camera
+                    if let query = sceneView?.pointOfView {
+                        visionNode?.look(at: query.position)
+                    }
+                    visionNode?.scale = SCNVector3(1.0, 1.0, 1.0) // Scale DOWN (from 3.0)
+                 } else {
+                     visionNode?.isHidden = true
+                 }
+             } else {
+                 visionNode?.isHidden = true
              }
          }
         
@@ -295,103 +473,7 @@ struct ARStoryCameraView: UIViewRepresentable {
             }
         }
         
-        // MARK: - Logic
-        
-        func updateFeatures(for node: SCNNode, using anchor: ARFaceAnchor) {
-             let vertexCount = anchor.geometry.vertices.count
-             let useVertices = vertexCount > 0
-             
-             for (feature, indices) in zip(viewModel.features, viewModel.featureIndices) {
-                 guard let child = node.childNode(withName: feature, recursively: false) as? FaceNode else { continue }
-                 
-                 if useVertices {
-                     // Front Camera (High Accuracy)
-                     let vertices = indices.map { anchor.geometry.vertices[$0] }
-                     child.updatePosition(for: vertices)
-                 } else {
-                     // Back Camera (Fallback Manual Positioning)
-                     // Approximate static offsets relative to face center
-                     var offset = SCNVector3Zero
-                     
-                     switch feature {
-                     case "nose":
-                         offset = SCNVector3(0, 0, 0.1)
-                     case "glasses":
-                         offset = SCNVector3(0, 0.05, 0.1)
-                     case "beard":
-                         offset = SCNVector3(0, -0.1, 0.1)
-                     default:
-                         break
-                     }
-                     
-                     child.position = offset
-                     child.scale = SCNVector3(5.0, 5.0, 5.0) // SUPER SCALE for visibility
-                     
-                     // print("📍 Back Camera Update: \(feature) at \(offset)")
-                 }
-             }
-         }
-        
-        func hideAllFilters(in sceneView: ARSCNView) {
-             sceneView.scene.rootNode.enumerateChildNodes { (node, _) in
-                 for feature in viewModel.features {
-                     if let featureNode = node.childNode(withName: feature, recursively: true) {
-                         featureNode.isHidden = true
-                     }
-                 }
-             }
-         }
-        
-        func applyFilter(_ filter: Filter, in sceneView: ARSCNView) {
-            // First hide all
-            hideAllFilters(in: sceneView)
-            
-            let featureName: String
-            switch filter.type {
-            case .nose: featureName = "nose"
-            case .glasses: featureName = "glasses"
-            case .beard: featureName = "beard"
-            }
-            
-            sceneView.scene.rootNode.enumerateChildNodes { (node, _) in
-                applyFilterToNode(filter, node: node)
-            }
-        }
-        
-        func applyFilterToNode(_ filter: Filter, node: SCNNode) {
-            let featureName: String
-            switch filter.type {
-            case .nose: featureName = "nose"
-            case .glasses: featureName = "glasses"
-            case .beard: featureName = "beard"
-            }
-            
-            if let featureNode = node.childNode(withName: featureName, recursively: true) as? FaceNode {
-                print("🎨 Applying Filter: \(featureName). Unhiding node.")
-                featureNode.isHidden = false
-                featureNode.index = 0
-                
-                if let plane = featureNode.geometry as? SCNPlane {
-                    // RENDERING FIX: Use Emission (ignores lighting) + Disable Depth Test (Always on top)
-                    plane.firstMaterial?.lightingModel = .constant // Flat rendering
-                    plane.firstMaterial?.writesToDepthBuffer = false
-                    plane.firstMaterial?.readsFromDepthBuffer = false
-                    
-                    if let image = UIImage(named: filter.imageName) {
-                        plane.firstMaterial?.diffuse.contents = image
-                        plane.firstMaterial?.emission.contents = image // Self-illuminated
-                    } else {
-                        // Keep blue fallback
-                        plane.firstMaterial?.diffuse.contents = UIColor.blue
-                        plane.firstMaterial?.emission.contents = UIColor.blue
-                    }
-                    
-                    plane.firstMaterial?.isDoubleSided = true
-                    plane.firstMaterial?.transparency = 1.0
-                    // plane.firstMaterial?.transparencyMode = .aOne // Default is better for emission
-                }
-            }
-        }
+
     }
 }
 

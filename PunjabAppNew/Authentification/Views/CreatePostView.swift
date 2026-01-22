@@ -19,15 +19,18 @@ struct CreatePostView: View {
     @State private var showMusicPicker: Bool = false
     @State private var showFeelingPicker: Bool = false
     @State private var tempInput: String = ""
-    @StateObject private var viewModel: FeedViewModel
+    @ObservedObject var viewModel: FeedViewModel
+    
+    var currentUser: User_data?
     
     // Camera Result Holders
     @State private var cameraImage: UIImage?
     @State private var cameraVideoURL: URL?
 
     private var width: CGFloat
-    init(viewModel: FeedViewModel,width: CGFloat) {
-        self._viewModel = StateObject(wrappedValue: viewModel)
+    init(viewModel: FeedViewModel, currentUser: User_data?, width: CGFloat) {
+        self.viewModel = viewModel
+        self.currentUser = currentUser
         self.width = width
     }
     
@@ -138,7 +141,7 @@ struct CreatePostView: View {
                         .scaledToFill()
                         .frame(width: 45, height: 45)
                         .clipShape(Circle())
-                    KFImage(URL(string: viewModel.currentUser?.avatar ?? ""))
+                    KFImage(URL(string: currentUser?.avatar ?? ""))
                         .resizable()
                         .scaledToFill()
                         .frame(width: 45, height: 45)
@@ -147,7 +150,7 @@ struct CreatePostView: View {
                     
                 VStack(alignment: .leading) {
                     HStack(spacing: 4) {
-                        Text(viewModel.currentUser?.displayName ?? "User")
+                        Text(currentUser?.displayName ?? "User")
                             .fontWeight(.semibold)
                         
                         if !viewModel.postFeeling.isEmpty {
@@ -378,6 +381,6 @@ struct CreatePostView: View {
     }
 }
 
-#Preview {
-    CreatePostView(viewModel: FeedViewModel(), width: 300)
-}
+//#Preview {
+//    CreatePostView(viewModel: FeedViewModel(), width: 300)
+//}

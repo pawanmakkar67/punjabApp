@@ -118,6 +118,20 @@ struct PostView: View {
     // MARK: - HEADER
     private var headerView: some View {
         HStack {
+            if let user = viewModel.posts[index].publisher {
+                NavigationLink(destination: PublicProfileView(user: user)) {
+                    headerContent
+                }
+                .buttonStyle(PlainButtonStyle())
+            } else {
+                headerContent
+            }
+        }
+        .padding(.horizontal)
+    }
+    
+    private var headerContent: some View {
+        HStack {
             ZStack {
                 Image("no_profile")
                     .resizable()
@@ -135,6 +149,7 @@ struct PostView: View {
             VStack(alignment: .leading, spacing: 0) {
                 Text(viewModel.posts[index].publisher?.displayName ?? "Unknown User")
                     .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.primary)
                 HStack(spacing: 5) {
                     Text("1 d")
                     Circle()
@@ -154,7 +169,6 @@ struct PostView: View {
             .fontWeight(.bold)
             .foregroundStyle(Color(.darkGray))
         }
-        .padding(.horizontal)
     }
     
     // MARK: - FOOTER
@@ -193,7 +207,7 @@ struct PostView: View {
                                     .foregroundColor(reaction.color)
                             }
                         } else {
-                            actionButton(image: "hand.thumbsup", title: "Like")
+                            actionButton(image: "hand.thumbsup", title: "Like", color: .gray)
                         }
                     }
                     .simultaneousGesture(
@@ -230,18 +244,17 @@ struct PostView: View {
                 }
                 Spacer()
                 Button(action: { showComments = true }) {
-                    actionButton(image: "message", title: "Comment")
+                    actionButton(image: "message", title: "Comment", color: .gray)
                 }
                 Spacer()
                 Button(action: { /* Send action */ }) {
-                    actionButton(image: "icone-messager-noir", title: "Send", isCustomImage: true)
+                    actionButton(image: "icone-messager-noir", title: "Send", isCustomImage: true, color: .gray)
                 }
                 Spacer()
                 Button(action: { showShareSheet = true }) {
-                    actionButton(image: "arrowshape.turn.up.right", title: "Share")
+                    actionButton(image: "arrowshape.turn.up.right", title: "Share", color: .gray)
                 }
             }
-            .foregroundStyle(facebookBlue)
             .font(.system(size: 14)).frame(width: width-40, alignment: .leading)
             .padding(.horizontal)
             .background(

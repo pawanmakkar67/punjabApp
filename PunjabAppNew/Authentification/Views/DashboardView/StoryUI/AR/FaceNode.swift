@@ -11,9 +11,8 @@ class FaceNode: SCNNode {
         super.init()
         
         let plane = SCNPlane(width: width, height: height)
-        if let first = options.first {
-            plane.firstMaterial?.diffuse.contents = UIImage(named: first)
-        }
+        // Optimization: Do NOT load image here. Load only when filter is applied.
+        plane.firstMaterial?.diffuse.contents = UIColor.clear
         plane.firstMaterial?.isDoubleSided = true
         
         // Enable transparency support

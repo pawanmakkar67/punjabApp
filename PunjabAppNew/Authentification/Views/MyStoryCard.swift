@@ -10,8 +10,11 @@ import Kingfisher
 
 struct MyStoryCard: View {
     @ObservedObject var viewModel: FeedViewModel
+    // var currentUser: User_data? // Use viewModel.currentUser
 
     @State private var showCreateStory: Bool = false
+    @State private var showSelectionDialog: Bool = false
+    @State private var showCreateReel: Bool = false
     
     var body: some View {
         ZStack(alignment: .top) {
@@ -25,25 +28,18 @@ struct MyStoryCard: View {
                         .frame(width: 100, height: 110)
                         .scaledToFill()
                         .clipShape(UnevenRoundedRectangle(cornerRadii: .init(topLeading: 15, topTrailing: 15)))
-                    if viewModel.uiImage == nil {
-                        KFImage(URL(string: viewModel.currentUser?.avatar ?? ""))
-                            .resizable()
-                            .frame(width: 100, height: 110)
-                            .scaledToFill()
-                            .clipShape(UnevenRoundedRectangle(cornerRadii: .init(topLeading: 15, topTrailing: 15)))
-                    } else {
-                        viewModel.profileImage
-                            .resizable()
-                            .frame(width: 100, height: 110)
-                            .scaledToFit()
-                            .clipShape(UnevenRoundedRectangle(cornerRadii: .init(topLeading: 15, topTrailing: 15)))
-                    }
+                    
+                    KFImage(URL(string: viewModel.currentUser?.avatar ?? ""))
+                        .resizable()
+                        .frame(width: 100, height: 110)
+                        .scaledToFill()
+                        .clipShape(UnevenRoundedRectangle(cornerRadii: .init(topLeading: 15, topTrailing: 15)))
                 }
                 VStack(spacing: 0) {
                     Image(systemName: "plus")
                         .foregroundStyle(.white)
                         .padding(5)
-                        .background(.blue)
+                        .background(AppColors.themeColor)
                         .clipShape(Circle())
                         .font(.system(size: 20,weight: .bold))
                         .overlay {
@@ -54,7 +50,7 @@ struct MyStoryCard: View {
                         Spacer()
                             .frame(height: 5)
                         Text("Create")
-                        Text("story")
+                        Text("story/Reel")
                     }
                     
                     .font(.system(size: 12,weight: .semibold))
@@ -63,10 +59,23 @@ struct MyStoryCard: View {
             }
         }
         .onTapGesture {
-            showCreateStory.toggle()
+            showSelectionDialog = true
+        }
+        .confirmationDialog("Create", isPresented: $showSelectionDialog) {
+            Button("Story") {
+                showCreateStory = true
+            }
+            Button("Reel") {
+                viewModel.isReel = true
+                showCreateReel = true
+            }
+            Button("Cancel", role: .cancel) {}
         }
         .fullScreenCover(isPresented: $showCreateStory) {
             CreateStoryView(viewModel: viewModel)
+        }
+        .fullScreenCover(isPresented: $showCreateReel) {
+            CreatePostView(viewModel: viewModel, currentUser: viewModel.currentUser, width: UIScreen.main.bounds.width)
         }
     }
 }

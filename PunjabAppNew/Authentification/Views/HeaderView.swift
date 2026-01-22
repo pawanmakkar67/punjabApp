@@ -30,6 +30,7 @@ struct HeaderView: View {
                     .resizable()
                     .scaledToFill()
                     .frame(width: 24, height: 24)
+                    .foregroundColor(AppColors.themeColor)
             }
             Button(action: {
                 onSeachTap()
@@ -39,11 +40,8 @@ struct HeaderView: View {
                     .scaledToFill()
                     .font(.system(size: 18,weight: .bold))
                     .frame(width: 24, height: 24)
+                    .foregroundColor(AppColors.themeColor)
             }
-            Image("magnifyingglass")
-                .resizable()
-                .scaledToFill()
-                .frame(width: 24, height: 24)
         }
         .padding(.horizontal)
     }

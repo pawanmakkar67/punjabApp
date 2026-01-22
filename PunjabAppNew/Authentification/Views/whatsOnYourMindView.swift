@@ -10,10 +10,10 @@ import Kingfisher
 
 struct whatsOnYourMindView: View {
     @State private var showCreatePostView: Bool = false
-    @StateObject private var viewModel: FeedViewModel
+    @ObservedObject var viewModel: FeedViewModel
     private var width: CGFloat
     init(viewModel: FeedViewModel,width: CGFloat) {
-        self._viewModel = StateObject(wrappedValue: viewModel)
+        self.viewModel = viewModel
         self.width = width
     }
     var body: some View {
@@ -72,7 +72,7 @@ struct whatsOnYourMindView: View {
 
         }
         .fullScreenCover(isPresented: $showCreatePostView) {
-            CreatePostView(viewModel: viewModel, width: width)
+            CreatePostView(viewModel: viewModel, currentUser: viewModel.currentUser, width: width)
         }
     }
 }

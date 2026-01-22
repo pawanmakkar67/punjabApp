@@ -18,7 +18,7 @@ import SwiftUI
 struct storyModel : Mappable {
 	var api_status : Int?
 	var stories : [Stories]?
-
+    var story_id : Int?
 	init?(map: Map) {
 
 	}
@@ -27,6 +27,7 @@ struct storyModel : Mappable {
 
 		api_status <- map["api_status"]
 		stories <- map["stories"]
+        story_id <- map["story_id"]
 	}
 
 }

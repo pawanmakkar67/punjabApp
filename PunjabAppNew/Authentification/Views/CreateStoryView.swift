@@ -16,8 +16,8 @@ import CoreImage
 import CoreImage.CIFilterBuiltins
 
 struct CreateStoryView: View {
-    @Environment(\.dismiss) private var dismiss
     @ObservedObject var viewModel: FeedViewModel
+    @Environment(\.dismiss) private var dismiss
     
     // AR ViewModel
     @StateObject private var faceTrackingViewModel = FaceTrackingViewModel()
@@ -611,22 +611,34 @@ struct CreateStoryView: View {
     }
     
     private func postStory() {
-        // Handle Video Upload
-        if let videoURL = faceTrackingViewModel.capturedVideoURL {
+        // Handle Video Upload (Captured or Gallery)
+        if let videoURL = faceTrackingViewModel.capturedVideoURL ?? viewModel.storyVideoURL {
              Task {
                  print("Video Upload from Story: \(videoURL)")
-                 // TODO: Integrate actual video upload
-                 dismiss()
+                 do {
+                     let videoData = try Data(contentsOf: videoURL)
+                     try await viewModel.uploadStory(fileType: "video", fileData: videoData)
+                     dismiss()
+                 } catch {
+                     print("Error uploading video: \(error)")
+                 }
              }
              return
         }
         
+        // Handle Image Upload
         guard let base = getBaseImage() else { return }
         viewModel.storyUiImage = base
         
+        guard let imageData = base.jpegData(compressionQuality: 0.5) else { return }
+        
         Task {
-            try await viewModel.uploadStory()
-            dismiss()
+            do {
+                try await viewModel.uploadStory(fileType: "image", fileData: imageData)
+                dismiss()
+            } catch {
+                 print("Error uploading image: \(error)")
+            }
         }
     }
 }
